@@ -129,9 +129,7 @@ public partial class MeshManager : MeshInstance3D
 	
 	private bool HasNeighbor(Faces face, Dictionary<Vector3, Color> data, Vector3 position)
 	{
-		var index = (int)face;
-		if (_normals.Count <= index) return false;
-		var neighborPos = position + _normals[index];
+		var neighborPos = position + _faceNormals[face];
 		return data.ContainsKey(neighborPos);
 	}
 }

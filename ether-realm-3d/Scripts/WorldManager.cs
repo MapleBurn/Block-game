@@ -12,7 +12,7 @@ public partial class WorldManager : Node3D
 	[Export] private MultiMeshInstance3D _multiMesh;
 	[Export] private MeshManager _mesh;
 	
-	private Vector3 _worldSize = new Vector3(64, 64, 64);
+	private Vector3 _worldSize = new Vector3(640, 64, 640);
 	private readonly SCG.Dictionary<Vector3, Color> _data = new();
 
 	[Export] private Array<Color> _colors = new();
