@@ -9,8 +9,9 @@ public partial class Player : CharacterBody3D
 	private Camera3D _camera;
 	private RayCast3D _rayCast;
 	
-	public const float Speed = 15.0f;
-	public const float JumpVelocity = 10f;
+	public const float Speed = 5.0f;
+	public const float JumpVelocity = 8f;
+	private bool _isFlying = true;
 	
 	private const float MouseSensitivity = 0.002f;
 
@@ -34,13 +35,25 @@ public partial class Player : CharacterBody3D
 		}
 	}
 
+	public override void _Process(double delta)
+	{
+		if (Input.IsActionJustPressed("fly"))
+		{
+			_isFlying = !_isFlying;
+		}
+	}
+	
 	public override void _PhysicsProcess(double delta)
 	{
 		Vector3 velocity = Velocity;
 		var speed = Input.IsActionPressed("sprint") ? Speed * 2f : Speed;
+		if (_isFlying)
+		{
+			speed *= 2f;
+		}
 		
 		// Add the gravity.
-		/*if (!IsOnFloor())
+		if (!IsOnFloor() && !_isFlying)
 		{
 			velocity += GetGravity() * (float)delta;
 		}
@@ -48,13 +61,13 @@ public partial class Player : CharacterBody3D
 		{
 			// Auto jump to climb small ledges.
 			velocity.Y = JumpVelocity;
-		}*/
+		}
 
 		// Handle Jump.
-		/*if (Input.IsActionJustPressed("jump") && IsOnFloor())
+		if (Input.IsActionJustPressed("jump") && IsOnFloor() && !_isFlying)
 		{
 			velocity.Y = JumpVelocity;
-		}*/
+		}
 		
 		if (Input.IsActionPressed("free_cursor"))
 		{
@@ -86,7 +99,7 @@ public partial class Player : CharacterBody3D
 		{
 			velocity.Y = speed;
 		}
-		else
+		else if (_isFlying)
 		{
 			velocity.Y = Mathf.MoveToward(Velocity.Y, 0, speed);;
 		}

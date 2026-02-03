@@ -12,21 +12,21 @@ public partial class WorldManager : Node3D
 	[Export] private MultiMeshInstance3D _multiMesh;
 	[Export] private MeshManager _mesh;
 	
-	private Vector3 _worldSize = new Vector3(640, 64, 640);
+	private Vector3 _worldSize = new Vector3(256, 128, 256);
 	private readonly SCG.Dictionary<Vector3, Color> _data = new();
 
 	[Export] private Array<Color> _colors = new();
 	
 	public override void _Ready()
 	{
-		GenerateWorld(0.3f);
+		GenerateWorld();
 	}
 	
 	public override void _Process(double delta)
 	{
 	}
 	
-	private void GenerateWorld(float cutoff)
+	private void GenerateWorld()
 	{
 		var noise = new FastNoiseLite();
 		noise.NoiseType = FastNoiseLite.NoiseTypeEnum.Simplex;
@@ -38,6 +38,7 @@ public partial class WorldManager : Node3D
 				for (int z = 0; z < _worldSize.Z; z++)
 				{
 					var random = noise.GetNoise3D(x, y, z);
+					var cutoff = y / _worldSize.Y * 0.25f; // s rostoucí výškou je menší pravděpodobnost výskytu bloku
 					if (random > cutoff)
 					{
 						/*var newBlock = _blockScene.Instantiate<CsgBox3D>();

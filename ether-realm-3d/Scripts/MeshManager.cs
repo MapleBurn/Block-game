@@ -9,6 +9,7 @@ namespace EtherRealm3D.Scripts;
 public partial class MeshManager : MeshInstance3D
 {
 	[Export] private Material _material;
+	[Export] private CollisionShape3D _collider;
 	
 	private List<Vector3> _vertices = new();  
 	private List<Vector3> _normals = new();  
@@ -111,6 +112,7 @@ public partial class MeshManager : MeshInstance3D
 		arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, nestedArray);
 		Mesh = arrayMesh;
 		Mesh.SurfaceSetMaterial(0, _material);
+		_collider.Shape = Mesh.CreateTrimeshShape();
 	}
 	
 	private void AddFace(Faces face, Vector3 position, Color color)
@@ -122,7 +124,7 @@ public partial class MeshManager : MeshInstance3D
 			{
 				_vertices.Add(_cubeVertices[(int)triangle[i]] + position);  
 				_normals.Add(_faceNormals[face]);  
-				_colors.Add(_faceColors[face]);
+				_colors.Add(color);
 			}
 		}
 	}
