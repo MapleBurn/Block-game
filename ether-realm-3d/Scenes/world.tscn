@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://j1hvycb70s3f" path="res://Scripts/WorldManager.cs" id="1_go701"]
 [ext_resource type="PackedScene" uid="uid://iqcwjbw0i4ca" path="res://Scenes/player.tscn" id="2_go701"]
-[ext_resource type="Script" uid="uid://dkxj3grfq2imo" path="res://Scripts/MeshManager.cs" id="3_5a7ea"]
+[ext_resource type="PackedScene" uid="uid://chp4dsqccauu5" path="res://Scenes/chunk_manager.tscn" id="3_5a7ea"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_a02cp"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -19,25 +19,9 @@ ssao_enabled = true
 ssil_enabled = true
 glow_enabled = true
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_go701"]
-vertex_color_use_as_albedo = true
-
-[sub_resource type="BoxMesh" id="BoxMesh_go701"]
-material = SubResource("StandardMaterial3D_go701")
-
-[sub_resource type="MultiMesh" id="MultiMesh_go701"]
-transform_format = 1
-use_colors = true
-mesh = SubResource("BoxMesh_go701")
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5a7ea"]
-vertex_color_use_as_albedo = true
-
-[node name="World" type="Node3D" unique_id=732165086 node_paths=PackedStringArray("_multiMesh", "_mesh")]
+[node name="World" type="Node3D" unique_id=732165086 node_paths=PackedStringArray("_chunkManager")]
 script = ExtResource("1_go701")
-_multiMesh = NodePath("GreedyMesh")
-_mesh = NodePath("MeshInstance3D")
-_colors = Array[Color]([Color(0.5409905, 0.5409905, 0.5409905, 1), Color(0.15431759, 0.4762135, 2.8878452e-07, 1), Color(0.34602, 0.22199306, 0.06815998, 1), Color(0.8388351, 0.36360586, 0.32701263, 1)])
+_chunkManager = NodePath("ChunkManager")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=379711448]
 environment = SubResource("Environment_5a7ea")
@@ -49,16 +33,6 @@ shadow_enabled = true
 [node name="Player" parent="." unique_id=359344863 instance=ExtResource("2_go701")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 48.85762, 10.891697)
 
-[node name="GridMap" type="GridMap" parent="." unique_id=1576189192]
-
-[node name="GreedyMesh" type="MultiMeshInstance3D" parent="." unique_id=1037994243]
-multimesh = SubResource("MultiMesh_go701")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=160510553 node_paths=PackedStringArray("_collider")]
-script = ExtResource("3_5a7ea")
-_material = SubResource("StandardMaterial3D_5a7ea")
-_collider = NodePath("StaticBody3D/CollisionShape3D")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="MeshInstance3D" unique_id=935886712]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/StaticBody3D" unique_id=534104099]
+[node name="ChunkManager" parent="." unique_id=943948065 instance=ExtResource("3_5a7ea")]
+_chunkSize = 32
+_dimensions = Vector3i(256, 128, 256)

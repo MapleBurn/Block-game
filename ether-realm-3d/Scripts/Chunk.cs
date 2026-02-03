@@ -6,15 +6,19 @@ using GC = Godot.Collections;
 
 namespace EtherRealm3D.Scripts;
 
-public partial class MeshManager : MeshInstance3D
+public partial class Chunk : StaticBody3D
 {
 	[Export] private Material _material;
 	[Export] private CollisionShape3D _collider;
+	[Export] private MeshInstance3D _meshInstance;
 	
-	private List<Vector3> _vertices = new();  
-	private List<Vector3> _normals = new();  
-	private List<Color> _colors = new();
+	private readonly List<Vector3> _vertices = new();  
+	private readonly List<Vector3> _normals = new();  
+	private readonly List<Color> _colors = new();
 	
+	private readonly Dictionary<Vector3, Color> _blocks = new();
+
+	#region Cube data
 	// pozice vertexů krychle o velikosti 1x1x1, centrované v počátku souřadnic
 	private Vector3[] _cubeVertices = new Vector3[]
 	{
@@ -69,31 +73,58 @@ public partial class MeshManager : MeshInstance3D
 		{ Faces.Top, Colors.Green },
 		{ Faces.Bottom, Colors.Red }
 	};
-
+	#endregion
 	public override void _Ready()
 	{
-		//GenerateMesh();
+		
 	}
 	
 	public override void _Process(double delta)
 	{
 	}
-	
-	public void GenerateMesh(Dictionary<Vector3, Color> data)
+
+	public void GenerateData(int size, int maxHeight, Noise noise, GC.Array<Color> colors)
 	{
-		foreach (var d in data)
+		for (int x = 0; x < size; x++)
 		{
-			if (!HasNeighbor(Faces.Front, data, d.Key))
+			for (int z = 0; z < size; z++)
+			{
+				var globalPos = new Vector2(x + Position.X, z + Position.Z);
+				
+				// procedurální terrain gen
+				var random = ((noise.GetNoise2D(globalPos.X, globalPos.Y) + 0.5 * noise.GetNoise2D(globalPos.X * 2, globalPos.Y * 2) + 0.25) * noise.GetNoise2D(globalPos.X * 4, globalPos.Y * 4) / 1.75f + 1) / 2f;
+				var height = maxHeight * Mathf.Pow(random, 2);
+
+				if (height < Position.Y)
+					continue;
+				
+				var localHeight = height - Position.Y;
+				for (int y = 0; y < Math.Min(localHeight, size); y++)
+				{
+					_blocks[new Vector3(x, y, z)] = colors[y % colors.Count];
+				}
+			}
+		}
+	}
+	
+	public void GenerateMesh()
+	{
+		if (_blocks.Count == 0)
+			return;
+		
+		foreach (var d in _blocks)
+		{
+			if (!HasNeighbor(Faces.Front, _blocks, d.Key))
 				AddFace(Faces.Front, d.Key, d.Value);
-			if (!HasNeighbor(Faces.Back, data, d.Key))
+			if (!HasNeighbor(Faces.Back, _blocks, d.Key))
 				AddFace(Faces.Back, d.Key, d.Value);
-			if (!HasNeighbor(Faces.Left, data, d.Key))
+			if (!HasNeighbor(Faces.Left, _blocks, d.Key))
 				AddFace(Faces.Left, d.Key, d.Value);
-			if (!HasNeighbor(Faces.Right, data, d.Key))
+			if (!HasNeighbor(Faces.Right, _blocks, d.Key))
 				AddFace(Faces.Right, d.Key, d.Value);
-			if (!HasNeighbor(Faces.Top, data, d.Key))
+			if (!HasNeighbor(Faces.Top, _blocks, d.Key))
 				AddFace(Faces.Top, d.Key, d.Value);
-			if (!HasNeighbor(Faces.Bottom, data, d.Key))
+			if (!HasNeighbor(Faces.Bottom, _blocks, d.Key))
 				AddFace(Faces.Bottom, d.Key, d.Value);
 		}
 		
@@ -110,9 +141,9 @@ public partial class MeshManager : MeshInstance3D
 		
 		var arrayMesh = new ArrayMesh();
 		arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, nestedArray);
-		Mesh = arrayMesh;
-		Mesh.SurfaceSetMaterial(0, _material);
-		_collider.Shape = Mesh.CreateTrimeshShape();
+		_meshInstance.Mesh = arrayMesh;
+		_meshInstance.Mesh.SurfaceSetMaterial(0, _material);
+		_collider.Shape = _meshInstance.Mesh.CreateTrimeshShape();
 	}
 	
 	private void AddFace(Faces face, Vector3 position, Color color)
