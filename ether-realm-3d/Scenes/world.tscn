@@ -1,8 +1,8 @@
-[gd_scene format=3 uid="uid://cvwgj70b1wjoq"]
+[gd_scene load_steps=7 format=3 uid="uid://cvwgj70b1wjoq"]
 
 [ext_resource type="Script" uid="uid://j1hvycb70s3f" path="res://Scripts/WorldManager.cs" id="1_go701"]
 [ext_resource type="PackedScene" uid="uid://iqcwjbw0i4ca" path="res://Scenes/player.tscn" id="2_go701"]
-[ext_resource type="PackedScene" uid="uid://chp4dsqccauu5" path="res://Scenes/chunk_manager.tscn" id="3_5a7ea"]
+[ext_resource type="PackedScene" path="res://Scenes/chunk_manager.tscn" id="3_5a7ea"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_a02cp"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -19,20 +19,20 @@ ssao_enabled = true
 ssil_enabled = true
 glow_enabled = true
 
-[node name="World" type="Node3D" unique_id=732165086 node_paths=PackedStringArray("_chunkManager")]
+[node name="World" type="Node3D" node_paths=PackedStringArray("_chunkManager")]
 script = ExtResource("1_go701")
 _chunkManager = NodePath("ChunkManager")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=379711448]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_5a7ea")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1026108467]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
 shadow_enabled = true
 
-[node name="Player" parent="." unique_id=359344863 instance=ExtResource("2_go701")]
+[node name="Player" parent="." instance=ExtResource("2_go701")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 48.85762, 10.891697)
 
-[node name="ChunkManager" parent="." unique_id=943948065 instance=ExtResource("3_5a7ea")]
+[node name="ChunkManager" parent="." instance=ExtResource("3_5a7ea")]
 _chunkSize = 32
-_dimensions = Vector3i(256, 128, 256)
+_dimensions = Vector3i(1024, 256, 1024)

@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://bkboaviyn1g0b"]
+[gd_scene load_steps=0 format=3 uid="uid://bkboaviyn1g0b"]
 
 [ext_resource type="Script" uid="uid://dkxj3grfq2imo" path="res://Scripts/Chunk.cs" id="1_byomg"]
 
