@@ -1,8 +1,9 @@
-[gd_scene load_steps=7 format=3 uid="uid://cvwgj70b1wjoq"]
+[gd_scene format=3 uid="uid://cvwgj70b1wjoq"]
 
 [ext_resource type="Script" uid="uid://j1hvycb70s3f" path="res://Scripts/WorldManager.cs" id="1_go701"]
 [ext_resource type="PackedScene" uid="uid://iqcwjbw0i4ca" path="res://Scenes/player.tscn" id="2_go701"]
-[ext_resource type="PackedScene" path="res://Scenes/chunk_manager.tscn" id="3_5a7ea"]
+[ext_resource type="PackedScene" uid="uid://chp4dsqccauu5" path="res://Scenes/chunk_manager.tscn" id="3_5a7ea"]
+[ext_resource type="PackedScene" uid="uid://bv8tk3o57d5fp" path="res://Scenes/pause_screen.tscn" id="4_8j60k"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_a02cp"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -19,20 +20,24 @@ ssao_enabled = true
 ssil_enabled = true
 glow_enabled = true
 
-[node name="World" type="Node3D" node_paths=PackedStringArray("_chunkManager")]
+[node name="World" type="Node3D" unique_id=398288382 node_paths=PackedStringArray("_chunkManager")]
 script = ExtResource("1_go701")
 _chunkManager = NodePath("ChunkManager")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=329264379]
 environment = SubResource("Environment_5a7ea")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=287376974]
 transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
 shadow_enabled = true
 
-[node name="Player" parent="." instance=ExtResource("2_go701")]
+[node name="Player" parent="." unique_id=1038714699 instance=ExtResource("2_go701")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 48.85762, 10.891697)
 
-[node name="ChunkManager" parent="." instance=ExtResource("3_5a7ea")]
+[node name="ChunkManager" parent="." unique_id=533602231 node_paths=PackedStringArray("_player") instance=ExtResource("3_5a7ea")]
 _chunkSize = 32
-_dimensions = Vector3i(1024, 256, 1024)
+_player = NodePath("../Player")
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=1132825550]
+
+[node name="PauseScreen" parent="UI" unique_id=870955744 instance=ExtResource("4_8j60k")]

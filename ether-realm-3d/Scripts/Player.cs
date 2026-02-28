@@ -69,15 +69,6 @@ public partial class Player : CharacterBody3D
 			velocity.Y = JumpVelocity;
 		}
 		
-		if (Input.IsActionPressed("free_cursor"))
-		{
-			Input.SetMouseMode(Input.MouseModeEnum.Visible);
-		}
-		else
-		{
-			Input.SetMouseMode(Input.MouseModeEnum.Captured);
-		}
-		
 		Vector2 inputDir = Input.GetVector("left", "right", "up", "down");
 		Vector3 direction = (Transform.Basis * new Vector3(inputDir.X, 0, inputDir.Y)).Normalized();
 		if (direction != Vector3.Zero)

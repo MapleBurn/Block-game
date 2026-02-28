@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://bv8tk3o57d5fp"]
+
+[ext_resource type="Script" uid="uid://cb1pwp6jyrydu" path="res://Scripts/PauseScreen.cs" id="1_xub4q"]
+
+[node name="PauseScreen" type="Control" unique_id=870955744]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_xub4q")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=857033258]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.36282945, 0.36282945, 0.36282945, 0.13725491)
+
+[node name="btnResume" type="Button" parent="." unique_id=295443926]
+z_index = 1
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = 216.0
+offset_top = -77.0
+offset_right = 216.0
+offset_bottom = -34.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.6400002, 1.72)
+text = "Resume"
+
+[node name="btnExit" type="Button" parent="." unique_id=1084223897]
+z_index = 1
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = 215.99998
+offset_top = 19.99997
+offset_right = 216.0
+offset_bottom = 67.99997
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.6400002, 1.52)
+text = "Exit Game"
+
+[connection signal="pressed" from="btnResume" to="." method="BtnResumePressed"]
+[connection signal="pressed" from="btnExit" to="." method="BtnExitPressed"]
