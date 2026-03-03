@@ -104,10 +104,21 @@ public partial class ChunkManager : Node
                 if (!required.Contains(key))
                     toRemove.Add(key);
 
-            foreach (var rem in toRemove)
-            {
-                _loadedChunks[rem].QueueFree();
-                _loadedChunks.Remove(rem);
+            foreach (var rem in toRemove)  
+            {  
+                Chunk chunk = _loadedChunks[rem];  
+      
+                // DŮLEŽITÉ: Data musíme vytáhnout PŘEDTÍM, než zavoláme QueueFree  
+                if (chunk.IsDirty)   
+                {  
+                    byte[] data = chunk.GetSaveData();  
+                    Vector3I pos = rem;  
+                    // Uložíme na pozadí, aby se hra nesekala  
+                    Task.Run(() => SaveChunkToDisk(pos, data));  
+                }  
+  
+                chunk.QueueFree();  
+                _loadedChunks.Remove(rem);  
             }
         }
 
@@ -122,33 +133,69 @@ public partial class ChunkManager : Node
             }
         }
     }
-
-    private void GenerateChunkAsync(Vector3I chunkCoord)
-    {
-        // Instantiate musí být na hlavním vlákně – data a mesh generujeme zde
-        // Proto chunk vytvoříme přes CallDeferred nebo předpočítáme data a mesh odděleně.
-        // Chunk.cs generuje data a mesh interně, takže ho vytvoříme a naplníme zde,
-        // ale do scény ho přidáme až v _Process přes _readyChunks queue.
-
-        var chunk = _chunkScene.Instantiate<Chunk>();
-
-        chunk.Position = new Vector3(
-            chunkCoord.X * _chunkSize,
-            chunkCoord.Y * _chunkSize,
-            chunkCoord.Z * _chunkSize
-        );
-
-        chunk.GenerateData(_chunkSize, 256, _noise, _colors);
-        chunk.GenerateMesh();
-
-        lock (_lock)
-        {
-            _readyChunks.Enqueue(chunk);
-            _loadedChunks[chunkCoord] = chunk;
-            _chunksInProgress.Remove(chunkCoord);
-        }
+    
+    private void SaveChunkToDisk(Vector3I coord, byte[] data)  
+    {  
+        if (data.Length == 0) return;  
+  
+        string path = GetChunkPath(coord);  
+        string globalPath = ProjectSettings.GlobalizePath(path);  
+        string dir = System.IO.Path.GetDirectoryName(globalPath);  
+  
+        try   
+        {  
+            if (!System.IO.Directory.Exists(dir))  
+                System.IO.Directory.CreateDirectory(dir);  
+  
+            System.IO.File.WriteAllBytes(globalPath, data);  
+            // GD.Print($"Ulozen chunk: {coord}"); // Pro debug odkomentuj  
+        }  
+        catch (Exception e)  
+        {  
+            GD.PrintErr($"Selhalo ulozeni chunku {coord}: {e.Message}");  
+        }  
     }
 
+    private void GenerateChunkAsync(Vector3I chunkCoord)  
+    {  
+        string path = ProjectSettings.GlobalizePath(GetChunkPath(chunkCoord));  
+        var chunk = _chunkScene.Instantiate<Chunk>();  
+      
+        // Nastavení pozice musí proběhnout hned  
+        chunk.Position = new Vector3(  
+            chunkCoord.X * _chunkSize,  
+            chunkCoord.Y * _chunkSize,  
+            chunkCoord.Z * _chunkSize  
+        );  
+  
+        if (System.IO.File.Exists(path))  
+        {  
+            byte[] data = System.IO.File.ReadAllBytes(path);  
+            chunk.LoadSaveData(data);  
+        }  
+        else  
+        {  
+            chunk.GenerateData(_chunkSize, 256, _noise, _colors);  
+            chunk.IsDirty = true;   
+        }  
+  
+        chunk.GenerateMesh();  
+  
+        lock (_lock)  
+        {  
+            _readyChunks.Enqueue(chunk);  
+            _loadedChunks[chunkCoord] = chunk;  
+            _chunksInProgress.Remove(chunkCoord);  
+        }  
+    }
+
+    private string GetChunkPath(Vector3I coord)  
+    {  
+        return $"user://saves/chunk_{coord.X}_{coord.Y}_{coord.Z}.dat";  
+    }
+    
+    
+    
     public override void _ExitTree()
     {
         // počkáme na dokončení všech tasků při ukončení

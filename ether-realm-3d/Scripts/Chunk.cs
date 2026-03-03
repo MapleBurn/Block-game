@@ -17,6 +17,8 @@ public partial class Chunk : StaticBody3D
 	private readonly List<Color> _colors = new();
 	
 	private readonly Dictionary<Vector3, Color> _blocks = new();
+	
+	public bool IsDirty { get; set; } = false;
 
 	#region Cube data
 	// pozice vertexů krychle o velikosti 1x1x1, centrované v počátku souřadnic
@@ -164,5 +166,54 @@ public partial class Chunk : StaticBody3D
 	{
 		var neighborPos = position + _faceNormals[face];
 		return data.ContainsKey(neighborPos);
+	}
+	
+	
+	
+	public byte[] GetSaveData()  
+	{  
+		if (_blocks.Count == 0) return Array.Empty<byte>();  
+  
+		using var stream = new System.IO.MemoryStream();  
+		using var writer = new System.IO.BinaryWriter(stream);  
+  
+		writer.Write(_blocks.Count);  
+		foreach (var kvp in _blocks)  
+		{  
+			// Pozice  
+			writer.Write(kvp.Key.X);  
+			writer.Write(kvp.Key.Y);  
+			writer.Write(kvp.Key.Z);  
+			// Barva  
+			writer.Write(kvp.Value.R);  
+			writer.Write(kvp.Value.G);  
+			writer.Write(kvp.Value.B);  
+			writer.Write(kvp.Value.A);  
+		}  
+		return stream.ToArray();  
+	}  
+  
+	public void LoadSaveData(byte[] data)  
+	{  
+		if (data == null || data.Length == 0) return;  
+  
+		_blocks.Clear();  
+		using var stream = new System.IO.MemoryStream(data);  
+		using var reader = new System.IO.BinaryReader(stream);  
+  
+		try   
+		{  
+			int count = reader.ReadInt32();  
+			for (int i = 0; i < count; i++)  
+			{  
+				Vector3 pos = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());  
+				Color col = new Color(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());  
+				_blocks[pos] = col;  
+			}  
+		}  
+		catch (Exception e)  
+		{  
+			GD.PrintErr($"Chyba při čtení dat chunku: {e.Message}");  
+		}  
 	}
 }

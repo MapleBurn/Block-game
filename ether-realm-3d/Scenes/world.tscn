@@ -20,9 +20,8 @@ ssao_enabled = true
 ssil_enabled = true
 glow_enabled = true
 
-[node name="World" type="Node3D" unique_id=398288382 node_paths=PackedStringArray("_chunkManager")]
+[node name="World" type="Node3D" unique_id=398288382]
 script = ExtResource("1_go701")
-_chunkManager = NodePath("ChunkManager")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=329264379]
 environment = SubResource("Environment_5a7ea")
