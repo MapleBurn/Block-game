@@ -123,14 +123,17 @@ public partial class ChunkManager : Node
         }
 
         // generování nových chunků – každý v samostatném vlákně
-        foreach (var chunkPos in required)
-        {
-            if (!_loadedChunks.ContainsKey(chunkPos) && !_chunksInProgress.Contains(chunkPos))
-            {
-                _chunksInProgress.Add(chunkPos);
-                var pos = chunkPos; // capture pro lambda
-                Task.Run(() => GenerateChunkAsync(pos));
-            }
+        foreach (var chunkPos in required)  
+        {  
+            lock (_lock)  
+            {  
+                if (!_loadedChunks.ContainsKey(chunkPos) && !_chunksInProgress.Contains(chunkPos))  
+                {  
+                    _chunksInProgress.Add(chunkPos);  
+                    var pos = chunkPos;  
+                    Task.Run(() => GenerateChunkAsync(pos));  
+                }  
+            }  
         }
     }
     

@@ -46,7 +46,7 @@ public partial class Player : CharacterBody3D
 	public override void _PhysicsProcess(double delta)
 	{
 		Vector3 velocity = Velocity;
-		var speed = Input.IsActionPressed("sprint") ? Speed * 2f : Speed;
+		var speed = Input.IsActionPressed("sprint") ? Speed * 8f : Speed;
 		if (_isFlying)
 		{
 			speed *= 2f;

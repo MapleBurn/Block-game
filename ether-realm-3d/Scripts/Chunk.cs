@@ -16,7 +16,9 @@ public partial class Chunk : StaticBody3D
 	private readonly List<Vector3> _normals = new();  
 	private readonly List<Color> _colors = new();
 	
-	private readonly Dictionary<Vector3, Color> _blocks = new();
+	private readonly Dictionary<Vector3I, Color> _blocks = new();
+	
+	private readonly object _lock = new object();
 	
 	public bool IsDirty { get; set; } = false;
 
@@ -84,30 +86,6 @@ public partial class Chunk : StaticBody3D
 	public override void _Process(double delta)
 	{
 	}
-
-	public void GenerateData(int size, int maxHeight, Noise noise, GC.Array<Color> colors)
-	{
-		for (int x = 0; x < size; x++)
-		{
-			for (int z = 0; z < size; z++)
-			{
-				var globalPos = new Vector2(x + Position.X, z + Position.Z);
-				
-				// procedurální terrain gen
-				var random = ((noise.GetNoise2D(globalPos.X, globalPos.Y) + 0.5 * noise.GetNoise2D(globalPos.X * 2, globalPos.Y * 2) + 0.25) * noise.GetNoise2D(globalPos.X * 4, globalPos.Y * 4) / 1.75f + 1) / 2f;
-				var height = maxHeight * Mathf.Pow(random, 2);
-
-				if (height < Position.Y)
-					continue;
-				
-				var localHeight = height - Position.Y;
-				for (int y = 0; y < Math.Min(localHeight, size); y++)
-				{
-					_blocks[new Vector3(x, y, z)] = colors[y % colors.Count];
-				}
-			}
-		}
-	}
 	
 	public void GenerateMesh()
 	{
@@ -162,13 +140,89 @@ public partial class Chunk : StaticBody3D
 		}
 	}
 	
-	private bool HasNeighbor(Faces face, Dictionary<Vector3, Color> data, Vector3 position)
+	private bool HasNeighbor(Faces face, Dictionary<Vector3I, Color> data, Vector3 position)
 	{
 		var neighborPos = position + _faceNormals[face];
-		return data.ContainsKey(neighborPos);
+		return data.ContainsKey((Vector3I)neighborPos);
 	}
 	
+	private float Fbm(Noise noise, float x, float z, int octaves = 6)  
+	{  
+		float value = 0f;  
+		float amplitude = 1f;  
+		float frequency = 1f;  
+		float maxValue = 0f;  
+  
+		for (int i = 0; i < octaves; i++)  
+		{  
+			value += noise.GetNoise2D(x * frequency, z * frequency) * amplitude;  
+			maxValue += amplitude;  
+			amplitude *= 0.5f;  
+			frequency *= 2f;  
+		}  
+  
+		return value / maxValue; // normalizace na [-1, 1]  
+	}
 	
+	private float GetMountainNoise(Noise noise, float x, float z)  
+	{  
+		// Ridged Multifractal - vytvoří ostré hřebeny  
+		float n = noise.GetNoise2D(x * 0.01f, z * 0.01f);  
+		float ridged = 1.0f - Mathf.Abs(n);   
+		return Mathf.Pow(ridged, 3f); // Umocnění zvýrazní špičky a zploští úpatí  
+	}
+	
+	private Color GetBlockColor(int y, int surfaceY, GC.Array<Color> colors)  
+	{  
+		int depth = surfaceY - y;  
+  
+		if (depth == 0) return colors[0]; // grass  
+		if (depth <= 3) return colors[1]; // dirt  
+		return colors[2];                 // stone  
+	}
+	
+	public void GenerateData(int size, int maxHeight, Noise noise, GC.Array<Color> colors)
+	{
+		for (int x = 0; x < size; x++)
+		{
+			for (int z = 0; z < size; z++)
+			{
+				float gx = x + Position.X;
+				float gz = z + Position.Z;
+
+				// 1. Základní terén (mírné vlnění)
+				float baseNoise = (noise.GetNoise2D(gx * 0.05f, gz * 0.05f) + 1f) * 0.5f;
+				float baseHeight = baseNoise * (maxHeight * 0.3f); // Nížiny jsou max do 30% výšky
+
+				// 2. Horská maska (určuje, KDE budou hory)
+				// Použijeme velmi nízkou frekvenci pro velké biomy
+				float mountainMask = (noise.GetNoise2D(gx * 0.02f, gz * 0.02f) + 1f) * 0.5f;
+				mountainMask = Mathf.SmoothStep(0.4f, 0.7f, mountainMask); // Hory jen tam, kde je šum > 0.4
+
+				// 3. Samotné hory
+				float mountainNoise = GetMountainNoise(noise, gx, gz);
+				float mountainHeight = mountainNoise * (maxHeight * 0.8f); // Hory mohou jít až do 80% výšky
+
+				// 4. Finální kombinace
+				// Výška je základní terén + hory vynásobené maskou
+				int surfaceY = (int)(baseHeight + (mountainHeight * mountainMask));
+
+				// Omezení, aby to nepřeteklo maxHeight
+				surfaceY = Mathf.Clamp(surfaceY, 1, maxHeight - 1);
+
+				if (surfaceY < Position.Y) continue;
+
+				int localSurface = surfaceY - (int)Position.Y;
+				int fillTo = Math.Min(localSurface + 1, size);
+
+				for (int y = 0; y < fillTo; y++)
+				{
+					int worldY = y + (int)Position.Y;
+					_blocks[new Vector3I(x, y, z)] = GetBlockColor(worldY, surfaceY, colors);
+				}
+			}
+		}
+	}
 	
 	public byte[] GetSaveData()  
 	{  
@@ -206,7 +260,7 @@ public partial class Chunk : StaticBody3D
 			int count = reader.ReadInt32();  
 			for (int i = 0; i < count; i++)  
 			{  
-				Vector3 pos = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());  
+				Vector3I pos = new Vector3I(reader.ReadInt32(), reader.ReadInt32(), reader.ReadInt32());  
 				Color col = new Color(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());  
 				_blocks[pos] = col;  
 			}  

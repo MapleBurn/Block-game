@@ -35,6 +35,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 48.85762, 10.891697)
 
 [node name="ChunkManager" parent="." unique_id=533602231 node_paths=PackedStringArray("_player") instance=ExtResource("3_5a7ea")]
 _chunkSize = 32
+_colors = Array[Color]([Color(3.970787e-07, 0.46207392, 0.059927516, 1), Color(0.3119502, 0.14819315, 2.4065375e-08, 1), Color(0.4186196, 0.4298671, 0.43467385, 1)])
 _player = NodePath("../Player")
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1132825550]
