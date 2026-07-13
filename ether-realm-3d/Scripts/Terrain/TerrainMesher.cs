@@ -5,9 +5,7 @@ namespace EtherRealm3D.Scripts.Terrain;
 
 public static class TerrainMesher
 {
-    // Corner positions of a unit cube, indexed 0–7.  
-    // Must match the ordering assumed by EdgeTable and TriangleTable.  
-    private static readonly Vector3[] CornerOffsets = new Vector3[]  
+private static readonly Vector3[] CornerOffsets = new Vector3[]  
     {  
         new(0, 0, 0), // 0  
         new(1, 0, 0), // 1  
@@ -16,10 +14,16 @@ public static class TerrainMesher
         new(0, 1, 0), // 4  
         new(1, 1, 0), // 5  
         new(1, 1, 1), // 6  
-        new(0, 1, 1), // 7  
+        new(0, 1, 1)  // 7  
     };  
   
-    public static ArrayMesh GenerateMesh(float[,,] densities, float isoLevel, float voxelSize)  
+    /// <summary>  
+    /// Thread-safe. Returns raw mesh data — no Godot objects created here.  
+    /// </summary>  
+    public static ChunkMeshData GenerateMeshData(  
+        float[,,] densities,  
+        float isoLevel,  
+        float voxelSize)  
     {  
         var vertices = new List<Vector3>();  
         var normals  = new List<Vector3>();  
@@ -34,10 +38,37 @@ public static class TerrainMesher
         for (int z = 0; z < sizeZ; z++)  
             MarchCube(x, y, z, densities, isoLevel, voxelSize, vertices, normals, indices);  
   
-        return BuildArrayMesh(vertices, normals, indices);  
+        return new ChunkMeshData  
+        {  
+            Vertices = vertices.ToArray(),  
+            Normals  = normals.ToArray(),  
+            Indices  = indices.ToArray()  
+        };  
     }  
   
-    private static void MarchCube(int cx, int cy, int cz, float[,,] densities, float isoLevel, float voxelSize, List<Vector3> vertices, List<Vector3> normals, List<int> indices)  
+    /// <summary>  
+    /// Main thread only. Converts ChunkMeshData into a Godot ArrayMesh.  
+    /// </summary>  
+    public static ArrayMesh BuildMesh(ChunkMeshData data)  
+    {  
+        if (data.IsEmpty) return null;  
+  
+        var arrays = new Godot.Collections.Array();  
+        arrays.Resize((int)Mesh.ArrayType.Max);  
+        arrays[(int)Mesh.ArrayType.Vertex] = data.Vertices;  
+        arrays[(int)Mesh.ArrayType.Normal] = data.Normals;  
+        arrays[(int)Mesh.ArrayType.Index]  = data.Indices;  
+  
+        var mesh = new ArrayMesh();  
+        mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);  
+        return mesh;  
+    }  
+  
+    private static void MarchCube(  
+        int cx, int cy, int cz,  
+        float[,,] densities,  
+        float isoLevel, float voxelSize,  
+        List<Vector3> vertices, List<Vector3> normals, List<int> indices)  
     {  
         // 1. Sample the 8 corner densities.  
         float[] d = new float[8];  
@@ -53,9 +84,9 @@ public static class TerrainMesher
             if (d[i] < isoLevel) cubeIndex |= 1 << i;  
   
         int edgeMask = MarchingCubesTables.EdgeTable[cubeIndex];  
-        if (edgeMask == 0) return; // Fully inside or fully outside.  
+        if (edgeMask == 0) return;  
   
-        // 3. Interpolate a vertex on each active edge.  
+        // 3. Interpolate a vertex on each active edge using CornerPairs.  
         Vector3 cellOrigin = new Vector3(cx, cy, cz) * voxelSize;  
         Vector3[] edgeVertices = new Vector3[12];  
   
@@ -72,7 +103,7 @@ public static class TerrainMesher
             edgeVertices[e] = Interpolate(pA, pB, d[a], d[b], isoLevel);  
         }  
   
-        // 4. Emit triangles.  
+        // 4. Emit triangles using TriangleTable.  
         for (int t = 0; MarchingCubesTables.TriangleTable[cubeIndex, t] != -1; t += 3)  
         {  
             int e0 = MarchingCubesTables.TriangleTable[cubeIndex, t    ];  
@@ -80,19 +111,15 @@ public static class TerrainMesher
             int e2 = MarchingCubesTables.TriangleTable[cubeIndex, t + 2];  
   
             Vector3 v0 = edgeVertices[e0];  
-            Vector3 v1 = edgeVertices[e2];  
+            Vector3 v1 = edgeVertices[e2]; // swapped for correct winding  
             Vector3 v2 = edgeVertices[e1];  
   
-            // Flat face normal for this triangle.  
-            Vector3 normal = (v2 - v0).Cross(v1 - v0).Normalized();
+            Vector3 normal = (v2 - v0).Cross(v1 - v0).Normalized();  
   
             int baseIndex = vertices.Count;  
-            vertices.Add(v0);  
-            vertices.Add(v1);  
-            vertices.Add(v2);  
-            normals.Add(normal);  
-            normals.Add(normal);  
-            normals.Add(normal);  
+            vertices.Add(v0); normals.Add(normal);  
+            vertices.Add(v1); normals.Add(normal);  
+            vertices.Add(v2); normals.Add(normal);  
             indices.Add(baseIndex);  
             indices.Add(baseIndex + 1);  
             indices.Add(baseIndex + 2);  
@@ -105,20 +132,5 @@ public static class TerrainMesher
         if (Mathf.Abs(denom) < 1e-5f) return (pA + pB) * 0.5f;  
         float t = Mathf.Clamp((isoLevel - dA) / denom, 0f, 1f);  
         return pA.Lerp(pB, t);  
-    }  
-  
-    private static ArrayMesh BuildArrayMesh(List<Vector3> verts, List<Vector3> norms, List<int> idxs)  
-    {  
-        if (verts.Count == 0) return null;  
-  
-        var arrays = new Godot.Collections.Array();  
-        arrays.Resize((int)Mesh.ArrayType.Max);  
-        arrays[(int)Mesh.ArrayType.Vertex] = verts.ToArray();  
-        arrays[(int)Mesh.ArrayType.Normal] = norms.ToArray();  
-        arrays[(int)Mesh.ArrayType.Index]  = idxs.ToArray();  
-  
-        var mesh = new ArrayMesh();  
-        mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);  
-        return mesh;  
     }
 }
