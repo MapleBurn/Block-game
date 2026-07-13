@@ -1,8 +1,7 @@
 [gd_scene format=3 uid="uid://cvwgj70b1wjoq"]
 
-[ext_resource type="Script" uid="uid://j1hvycb70s3f" path="res://Scripts/WorldManager.cs" id="1_go701"]
+[ext_resource type="Script" uid="uid://ca53w3rbumtx6" path="res://Scripts/Terrain/TerrainChunk.cs" id="1_8j60k"]
 [ext_resource type="PackedScene" uid="uid://iqcwjbw0i4ca" path="res://Scenes/player.tscn" id="2_go701"]
-[ext_resource type="PackedScene" uid="uid://chp4dsqccauu5" path="res://Scenes/chunk_manager.tscn" id="3_5a7ea"]
 [ext_resource type="PackedScene" uid="uid://bv8tk3o57d5fp" path="res://Scenes/pause_screen.tscn" id="4_8j60k"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_a02cp"]
@@ -20,24 +19,28 @@ ssao_enabled = true
 ssil_enabled = true
 glow_enabled = true
 
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_5a7ea"]
+noise_type = 3
+frequency = 0.015
+
 [node name="World" type="Node3D" unique_id=398288382]
-script = ExtResource("1_go701")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=329264379]
 environment = SubResource("Environment_5a7ea")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=287376974]
-transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
+transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 9.348402, 15.218012, 5.1950073)
 shadow_enabled = true
 
 [node name="Player" parent="." unique_id=1038714699 instance=ExtResource("2_go701")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 48.85762, 10.891697)
-
-[node name="ChunkManager" parent="." unique_id=533602231 node_paths=PackedStringArray("_player") instance=ExtResource("3_5a7ea")]
-_chunkSize = 32
-_colors = Array[Color]([Color(3.970787e-07, 0.46207392, 0.059927516, 1), Color(0.3119502, 0.14819315, 2.4065375e-08, 1), Color(0.4186196, 0.4298671, 0.43467385, 1)])
-_player = NodePath("../Player")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.98621, 16.024899, 7.6845665)
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1132825550]
 
 [node name="PauseScreen" parent="UI" unique_id=870955744 instance=ExtResource("4_8j60k")]
+
+[node name="TestChunk" type="Node3D" parent="." unique_id=1762292482]
+script = ExtResource("1_8j60k")
+HeightNoise = SubResource("FastNoiseLite_5a7ea")
+TerrainAmplitude = 50.0
+TerrainBaseHeight = 12.0
