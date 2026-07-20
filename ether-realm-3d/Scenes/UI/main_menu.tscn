@@ -1,0 +1,46 @@
+[gd_scene format=3 uid="uid://d4kybaemrur8e"]
+
+[ext_resource type="Script" uid="uid://cofe80vqqdpxa" path="res://Scripts/UI/MainMenu.cs" id="1_5wsvm"]
+
+[node name="Main menu" type="Control" unique_id=1090883504]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_5wsvm")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1150636661]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.33660764, 0.3366076, 0.3366076, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1662554426]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 161.0
+offset_top = 98.0
+offset_right = -233.0
+offset_bottom = -116.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="BtnSingleplayer" type="Button" parent="VBoxContainer" unique_id=817705441]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Singleplayer"
+
+[node name="Button2" type="Button" parent="VBoxContainer" unique_id=848934188]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Magor"
+
+[connection signal="pressed" from="VBoxContainer/BtnSingleplayer" to="." method="OnSingleplayerPressed"]

@@ -1,0 +1,52 @@
+[gd_scene format=3 uid="uid://b8a77xde70m0r"]
+
+[ext_resource type="Script" uid="uid://b2slvwsr600pu" path="res://Scripts/UI/WorldSelection.cs" id="1_axwkk"]
+[ext_resource type="PackedScene" uid="uid://dfnro5xbg4rjs" path="res://Scenes/UI/world_save_file.tscn" id="1_bculr"]
+
+[node name="World selection" type="Control" unique_id=1605341753]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_axwkk")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=615398127]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.2592937, 0.2592937, 0.2592937, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=1363955142]
+custom_minimum_size = Vector2(700, 500)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -350.0
+offset_top = -250.0
+offset_right = 350.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=246596243]
+layout_mode = 2
+
+[node name="Save file" parent="MarginContainer/VBoxContainer" unique_id=879618327 instance=ExtResource("1_bculr")]
+layout_mode = 2
+
+[node name="Save file2" parent="MarginContainer/VBoxContainer" unique_id=290785935 instance=ExtResource("1_bculr")]
+layout_mode = 2
+
+[connection signal="FilePressed" from="MarginContainer/VBoxContainer/Save file" to="." method="OnFilePressed"]

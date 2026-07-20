@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://iqcwjbw0i4ca" path="res://Scenes/player.tscn" id="2_go701"]
 [ext_resource type="Script" uid="uid://buirl3m7vew2g" path="res://Scripts/Terrain/TerrainWorld.cs" id="3_5a7ea"]
-[ext_resource type="PackedScene" uid="uid://bv8tk3o57d5fp" path="res://Scenes/pause_screen.tscn" id="4_8j60k"]
+[ext_resource type="PackedScene" uid="uid://bv8tk3o57d5fp" path="res://Scenes/UI/pause_screen.tscn" id="4_8j60k"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_a02cp"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -37,5 +37,4 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.98621, 27.016127, 7.6845665
 
 [node name="Terrain" type="Node3D" parent="." unique_id=1762292482 node_paths=PackedStringArray("Player")]
 script = ExtResource("3_5a7ea")
-TerrainAmplitude = 25.0
 Player = NodePath("../Player")

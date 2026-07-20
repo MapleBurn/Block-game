@@ -1,6 +1,6 @@
 using Godot;
 
-namespace EtherRealm3D.Scripts;
+namespace EtherRealm3D.Scripts.UI;
 
 public partial class PauseScreen : Control
 {
@@ -28,11 +28,12 @@ public partial class PauseScreen : Control
 	
 	public void BtnResumePressed()
 	{
+		Input.SetMouseMode(Input.MouseModeEnum.Captured);
 		Visible = false;
 	}
 	
 	public void BtnExitPressed()
 	{
-		//GetTree().Quit();
+		GetTree().ChangeSceneToFile("res://Scenes/UI/main_menu.tscn");
 	}
 }

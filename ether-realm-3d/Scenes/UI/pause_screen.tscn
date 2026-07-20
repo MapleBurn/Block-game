@@ -1,0 +1,50 @@
+[gd_scene format=3 uid="uid://bv8tk3o57d5fp"]
+
+[ext_resource type="Script" uid="uid://cb1pwp6jyrydu" path="res://Scripts/PauseScreen.cs" id="1_xub4q"]
+
+[node name="PauseScreen" type="Control" unique_id=870955744]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_xub4q")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=857033258]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.36282945, 0.36282945, 0.36282945, 0.13725491)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1309725106]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 121.0
+offset_top = 123.0
+offset_right = -194.0
+offset_bottom = -145.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="btnResume" type="Button" parent="VBoxContainer" unique_id=295443926]
+z_index = 1
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Resume"
+
+[node name="btnExit" type="Button" parent="VBoxContainer" unique_id=1084223897]
+z_index = 1
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Exit Game"
+
+[connection signal="pressed" from="VBoxContainer/btnResume" to="." method="BtnResumePressed"]
+[connection signal="pressed" from="VBoxContainer/btnExit" to="." method="BtnExitPressed"]
