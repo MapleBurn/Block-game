@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Godot;
 
-namespace EtherRealm3D.Scripts.Terrain;
+namespace EtherRealm3D.Entities.World.Terrain.Scripts;
 
 public partial class TerrainWorld : Node3D
 {
@@ -13,12 +13,12 @@ public partial class TerrainWorld : Node3D
     public float NoiseFrequency = 0.025f;
     [Export] public float TerrainAmplitude = 15.0f;
 
-    [Export] public Player Player;
+    [Export] public Entities.Player.Player Player;
     [Export] public int ViewDistance = 5;
     [Export] public int VerticalViewDistance = 4;
     
     private FastNoiseLite _noise;  
-    private readonly Dictionary<Vector3I, TerrainChunk> _activeChunks = new();  
+    private readonly Dictionary<Vector3I, Entities.World.Terrain.Scripts.TerrainChunk> _activeChunks = new();  
     private Vector3I _lastViewerChunk = new Vector3I(int.MaxValue, int.MaxValue, int.MaxValue);  
     private readonly HashSet<Vector3I> _generatingChunks = new();
     
@@ -96,7 +96,7 @@ public override void _Ready()
   
     private void SpawnChunk(Vector3I coord)  
     {  
-        TerrainChunk chunk = new();  
+        Entities.World.Terrain.Scripts.TerrainChunk chunk = new();  
         AddChild(chunk);  
         chunk.Configure(coord, CellsPerAxis, VoxelSize, IsoLevel, _noise, TerrainAmplitude);  
   

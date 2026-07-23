@@ -1,0 +1,71 @@
+[gd_scene format=3 uid="uid://iqcwjbw0i4ca"]
+
+[ext_resource type="Script" uid="uid://dbtfaqauyej6n" path="res://Entities/Player/Player.cs" id="1_v0iea"]
+[ext_resource type="Script" uid="uid://b780qau6hajo3" path="res://Systems/UI/Scripts/HUD/MetricViewer.cs" id="2_cvnsp"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_f60y1"]
+radius = 0.7
+height = 2.5
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_f60y1"]
+radius = 0.7
+height = 2.5
+
+[node name="Player" type="CharacterBody3D" unique_id=1196190769]
+script = ExtResource("1_v0iea")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=775026470]
+shape = SubResource("CapsuleShape3D_f60y1")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=274684590]
+visible = false
+mesh = SubResource("CapsuleMesh_f60y1")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1301821518]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6732583, 0)
+
+[node name="RayCast3D" type="RayCast3D" parent="." unique_id=1434371116]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.0079012, -1.0020349)
+target_position = Vector3(0, 0, -1.5)
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1080663257]
+
+[node name="Metric Viewer" type="FoldableContainer" parent="HUD" unique_id=877789303 node_paths=PackedStringArray("_fpsLabel", "_posLabel", "_chunkLabel", "_player")]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -865.0
+offset_bottom = -267.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_cvnsp")
+_fpsLabel = NodePath("MarginContainer/VBoxContainer/FPS Label")
+_posLabel = NodePath("MarginContainer/VBoxContainer/Position Label")
+_chunkLabel = NodePath("MarginContainer/VBoxContainer/Chunk Label")
+_player = NodePath("../..")
+
+[node name="MarginContainer" type="MarginContainer" parent="HUD/Metric Viewer" unique_id=1518508669]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUD/Metric Viewer/MarginContainer" unique_id=1600448241]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="FPS Label" type="Label" parent="HUD/Metric Viewer/MarginContainer/VBoxContainer" unique_id=678963199]
+layout_mode = 2
+text = "FPS: 12"
+
+[node name="Position Label" type="Label" parent="HUD/Metric Viewer/MarginContainer/VBoxContainer" unique_id=2077271036]
+layout_mode = 2
+text = "Player position: 
+X = 1025
+Y = 546
+Z = -4587"
+
+[node name="Chunk Label" type="Label" parent="HUD/Metric Viewer/MarginContainer/VBoxContainer" unique_id=1532933522]
+layout_mode = 2
+text = "Loaded chunk count: 145"

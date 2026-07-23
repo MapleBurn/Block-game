@@ -1,7 +1,6 @@
-using System.Diagnostics.Tracing;
 using Godot;
 
-namespace EtherRealm3D.Scripts.UI;
+namespace EtherRealm3D.Systems.UI.Scripts;
 
 public partial class WorldSaveFile : Control
 {

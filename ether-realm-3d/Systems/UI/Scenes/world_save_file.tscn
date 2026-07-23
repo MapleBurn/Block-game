@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dfnro5xbg4rjs"]
 
 [ext_resource type="Texture2D" uid="uid://ctkmpjx7maeor" path="res://icon.svg" id="1_orms4"]
-[ext_resource type="Script" uid="uid://lfekabw4k4xe" path="res://Scripts/UI/WorldSaveFile.cs" id="1_we3ns"]
+[ext_resource type="Script" uid="uid://lfekabw4k4xe" path="res://Systems/UI/Scripts/WorldSaveFile.cs" id="1_we3ns"]
 
 [sub_resource type="Theme" id="Theme_we3ns"]
 

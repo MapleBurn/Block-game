@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
+using EtherRealm3D.Entities.World.Terrain.Scripts.Data;
 using Godot;
 
-namespace EtherRealm3D.Scripts.Terrain;
+namespace EtherRealm3D.Entities.World.Terrain.Scripts;
 
 public static class TerrainMesher
 {

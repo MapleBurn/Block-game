@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b8a77xde70m0r"]
 
-[ext_resource type="Script" uid="uid://b2slvwsr600pu" path="res://Scripts/UI/WorldSelection.cs" id="1_axwkk"]
-[ext_resource type="PackedScene" uid="uid://dfnro5xbg4rjs" path="res://Scenes/UI/world_save_file.tscn" id="1_bculr"]
+[ext_resource type="Script" uid="uid://b2slvwsr600pu" path="res://Systems/UI/Scripts/WorldSelection.cs" id="1_axwkk"]
+[ext_resource type="PackedScene" uid="uid://dfnro5xbg4rjs" path="res://Systems/UI/Scenes/world_save_file.tscn" id="1_bculr"]
 
 [node name="World selection" type="Control" unique_id=1605341753]
 layout_mode = 3

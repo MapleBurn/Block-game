@@ -1,7 +1,8 @@
 ﻿using System.Threading.Tasks;
+using EtherRealm3D.Entities.World.Terrain.Scripts.Data;
 using Godot;
 
-namespace EtherRealm3D.Scripts.Terrain;
+namespace EtherRealm3D.Entities.World.Terrain.Scripts;
 
 public partial class TerrainChunk : MeshInstance3D
 {

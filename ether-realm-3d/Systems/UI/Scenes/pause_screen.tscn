@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bv8tk3o57d5fp"]
 
-[ext_resource type="Script" uid="uid://cb1pwp6jyrydu" path="res://Scripts/PauseScreen.cs" id="1_xub4q"]
+[ext_resource type="Script" uid="uid://cb1pwp6jyrydu" path="res://Systems/UI/Scripts/PauseScreen.cs" id="1_xub4q"]
 
 [node name="PauseScreen" type="Control" unique_id=870955744]
 layout_mode = 3

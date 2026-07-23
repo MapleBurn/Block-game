@@ -1,6 +1,6 @@
 using Godot;
 
-namespace EtherRealm3D.Scripts.UI;
+namespace EtherRealm3D.Systems.UI.Scripts;
 
 public partial class WorldSelection : Control
 {

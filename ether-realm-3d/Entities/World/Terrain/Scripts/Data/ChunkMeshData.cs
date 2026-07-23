@@ -1,6 +1,6 @@
 ﻿using Godot;
 
-namespace EtherRealm3D.Scripts.Terrain;
+namespace EtherRealm3D.Entities.World.Terrain.Scripts.Data;
 
 /// <summary>  
 /// Plain data produced on a background thread.  
