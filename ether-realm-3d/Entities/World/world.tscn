@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://cvwgj70b1wjoq"]
 
 [ext_resource type="Script" uid="uid://c16qc660dgg0g" path="res://Entities/World/WorldManager.cs" id="1_c7b66"]
-[ext_resource type="PackedScene" uid="uid://iqcwjbw0i4ca" path="res://Entities/Player/player.tscn" id="1_wipa0"]
 [ext_resource type="PackedScene" uid="uid://bv8tk3o57d5fp" path="res://Systems/UI/Scenes/pause_screen.tscn" id="2_c7b66"]
-[ext_resource type="Script" uid="uid://buirl3m7vew2g" path="res://Entities/World/Terrain/Scripts/TerrainWorld.cs" id="4_uapak"]
+[ext_resource type="PackedScene" uid="uid://iqcwjbw0i4ca" path="res://Entities/Character/player.tscn" id="2_uapak"]
+[ext_resource type="Script" uid="uid://8gsn2ynfmxss" path="res://Entities/World/Terrain/Scripts/WorldGenerator.cs" id="4_qbaeu"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_a02cp"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -30,13 +30,12 @@ environment = SubResource("Environment_5a7ea")
 transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 9.348402, 15.218012, 5.1950073)
 shadow_enabled = true
 
-[node name="Player" parent="." unique_id=1038714699 instance=ExtResource("1_wipa0")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.98621, 27.016127, 7.6845665)
+[node name="Player" parent="." unique_id=1196190769 instance=ExtResource("2_uapak")]
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1132825550]
 
 [node name="PauseScreen" parent="UI" unique_id=870955744 instance=ExtResource("2_c7b66")]
 
-[node name="Terrain" type="Node3D" parent="." unique_id=1762292482 node_paths=PackedStringArray("Player")]
-script = ExtResource("4_uapak")
+[node name="WorldGenerator" type="Node3D" parent="." unique_id=2007700755 node_paths=PackedStringArray("Player")]
+script = ExtResource("4_qbaeu")
 Player = NodePath("../Player")

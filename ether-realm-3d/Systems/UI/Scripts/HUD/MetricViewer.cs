@@ -1,3 +1,4 @@
+using EtherRealm3D.Entities.Character;
 using Godot;
 
 namespace EtherRealm3D.Systems.UI.Scripts.HUD;
@@ -7,7 +8,7 @@ public partial class MetricViewer : FoldableContainer
     [Export] private Label _fpsLabel;
     [Export] private Label _posLabel;
     [Export] private Label _chunkLabel;
-    [Export] private Entities.Player.Player _player;
+    [Export] private Player _player;
 
     public override void _Ready()
     {

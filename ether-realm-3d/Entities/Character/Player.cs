@@ -1,6 +1,6 @@
 using Godot;
 
-namespace EtherRealm3D.Entities.Player;
+namespace EtherRealm3D.Entities.Character;
 
 public partial class Player : CharacterBody3D
 {

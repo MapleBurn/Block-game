@@ -4,6 +4,8 @@ namespace EtherRealm3D.Systems.UI.Scripts;
 
 public partial class PauseScreen : Control
 {
+	public const string MainMenuScenePath = "res://Systems/UI/Scenes/main_menu.tscn";
+	
 	public override void _Ready()
 	{
 		Visible = false;
@@ -34,6 +36,6 @@ public partial class PauseScreen : Control
 	
 	public void BtnExitPressed()
 	{
-		GetTree().ChangeSceneToFile("res://Scenes/UI/main_menu.tscn");
+		GetTree().ChangeSceneToFile(MainMenuScenePath);
 	}
 }
