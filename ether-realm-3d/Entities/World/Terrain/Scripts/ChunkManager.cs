@@ -8,9 +8,6 @@ namespace EtherRealm3D.Entities.World.Terrain.Scripts;
 public partial class ChunkManager : Node3D
 {
     private readonly Dictionary<Vector3I, TerrainChunk> _chunks = new();
-    // Replace with disk serialization later
-    private readonly Dictionary<Vector3I, TerrainChunk> _cachedChunks = new();
-
     // Coordinates of chunks that are currently generating to avoid generating the same chunk multiple times
     private readonly HashSet<Vector3I> _chunksInFlight = new();
     
@@ -24,13 +21,15 @@ public partial class ChunkManager : Node3D
     /// <summary>
     /// Initialize the manager with terrain generation parameters.
     /// </summary>
-    public void Initialize(int cellsPerAxis, float voxelSize, float isoLevel, FastNoiseLite noise, float amplitude)
+    public void Initialize(int cellsPerAxis, float voxelSize, float isoLevel, FastNoiseLite noise, float amplitude, string worldSaveDirectory = null)
     {
         _cellsPerAxis = cellsPerAxis;
         _voxelSize = voxelSize;
         _isoLevel = isoLevel;
         _noise = noise;
         _amplitude = amplitude;
+        
+        string saveDir = worldSaveDirectory ?? ProjectSettings.GlobalizePath("user://world/regions");
     }
     
     public async void UpdateTerrain(Vector3 position, int radius)
@@ -42,77 +41,55 @@ public partial class ChunkManager : Node3D
         }
 
         float chunkWorldSize = _cellsPerAxis * _voxelSize;
-
-        // Convert world position → chunk coordinate
+        
         var center = new Vector3I(
             Mathf.FloorToInt(position.X / chunkWorldSize),
             Mathf.FloorToInt(position.Y / chunkWorldSize),
-            Mathf.FloorToInt(position.Z / chunkWorldSize)
-        );
-
-        // Build the desired set of chunk coordinates
+            Mathf.FloorToInt(position.Z / chunkWorldSize));
+        
         var desired = new HashSet<Vector3I>();
         for (int x = -radius; x <= radius; x++)
         for (int y = -radius; y <= radius; y++)
         for (int z = -radius; z <= radius; z++)
             desired.Add(center + new Vector3I(x, y, z));
 
-        // Unload out-of-range chunks into cache
+        // Unload out-of-range chunks 
         var toUnload = new List<Vector3I>();
         foreach (var coord in _chunks.Keys)
             if (!desired.Contains(coord))
                 toUnload.Add(coord);
 
-        foreach (var coord in toUnload)
-        {
-            var chunk = _chunks[coord];
-            _chunks.Remove(coord);
-            RemoveChild(chunk);             // detach from scene tree; node still exists
-            _cachedChunks[coord] = chunk;
-        }
-
-        // Schedule generation for not yet generated chunks
-        var pendingTasks = new List<(Vector3I coord, Task<ChunkData> dataTask)>();
+        if (toUnload.Count > 0)
+            UnloadChunks(toUnload);
+        
+        var pendingTasks = new List<(Vector3I coord, Task<(ChunkData data, bool fromDisk)> task)>();
 
         foreach (var coord in desired)
         {
-            if (_chunks.ContainsKey(coord)) continue;       // already in the scene
+            if (_chunks.ContainsKey(coord)) continue;       // already active
             if (_chunksInFlight.Contains(coord)) continue;  // already being generated
 
-            if (_cachedChunks.TryGetValue(coord, out var cached))
-            {
-                // get cached chunk
-                _cachedChunks.Remove(coord);
-                _chunks[coord] = cached;
-                AddChild(cached);
-            }
-            else
-            {
-                // generate a new chunk
-                _chunksInFlight.Add(coord);
-                pendingTasks.Add((coord, SampleDensitiesAsync(coord)));
-            }
+            _chunksInFlight.Add(coord);
+            pendingTasks.Add((coord, GetChunkDataAsync(coord)));
         }
-
-        // Await each task and build the mesh on the main thread 
-        foreach (var (coord, dataTask) in pendingTasks)
+        
+        foreach (var (coord, task) in pendingTasks)
         {
-            // Background: density field sampling
-            ChunkData data;
+            // Background: disk load or density sampling
+            (ChunkData data, bool fromDisk) result;
             try
             {
-                data = await dataTask;
+                result = await task;
             }
             catch (System.Exception e)
             {
-                GD.PrintErr($"[ChunkManager] Density sampling failed for {coord}: {e.Message}");
+                GD.PrintErr($"[ChunkManager] Load/generate failed for {coord}: {e.Message}");
                 _chunksInFlight.Remove(coord);
                 continue;
             }
-
-            // Main thread: create and configure the chunk node
+            
             var chunk = new TerrainChunk();
-            chunk.Configure(data);
+            chunk.Configure(result.data, isDirty: !result.fromDisk, _cellsPerAxis, _voxelSize, _isoLevel);
             _chunks[coord] = chunk;
             AddChild(chunk);
 
@@ -134,18 +111,49 @@ public partial class ChunkManager : Node3D
         }
     }
     
+    private void UnloadChunks(List<Vector3I> coords)
+    {
+        var dirtyData = new List<ChunkData>(coords.Count);
+
+        foreach (var coord in coords)
+        {
+            var chunk = _chunks[coord];
+            _chunks.Remove(coord);
+            RemoveChild(chunk);
+
+            if (chunk.IsDirty)
+                dirtyData.Add(chunk.Data);
+            
+            chunk.QueueFree();
+        }
+
+        if (dirtyData.Count == 0) return;
+
+        RegionFileManager.SaveChunks(dirtyData);
+    }
+    
+    private async Task<(ChunkData data, bool fromDisk)> GetChunkDataAsync(Vector3I coord)
+    {
+        // Disk load attempt
+        ChunkData fromDisk = RegionFileManager.LoadChunk(coord);
+
+        if (fromDisk != null)
+            return (fromDisk, true);
+
+        // Procedural generation
+        ChunkData generated = await SampleDensitiesAsync(coord);
+        return (generated, false);
+    }
+    
     /// <summary>
     /// Asynchronously samples the density field, returns ChunkData.
     /// </summary>
     private Task<ChunkData> SampleDensitiesAsync(Vector3I coord)
     {
-        // Capture fields used inside the lambda to avoid closure over 'this'
-        // while the background thread is running.
         int cellsPerAxis = _cellsPerAxis;
-        float voxelSize  = _voxelSize;
-        float isoLevel   = _isoLevel;
-        float amplitude  = _amplitude;
-        var   noise      = _noise;
+        float voxelSize = _voxelSize;
+        float amplitude = _amplitude;
+        var   noise = _noise;
 
         return Task.Run(() =>
         {
@@ -168,7 +176,7 @@ public partial class ChunkManager : Node3D
                 densities[x, y, z] = worldPos.Y - height;
             }
 
-            return new ChunkData(coord, densities, isoLevel, voxelSize, cellsPerAxis);
+            return new ChunkData(coord, densities);
         });
     }
 

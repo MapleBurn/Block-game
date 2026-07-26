@@ -10,19 +10,25 @@ public partial class TerrainChunk : MeshInstance3D
     private int _cellsPerAxis;
     private float _voxelSize;
     private float _isoLevel;
+    
+    // Indicates if the chunk needs to be saved to disk (has changes)
+    public bool IsDirty { get; private set; } = true;
+    public void MarkDirty()  => IsDirty = true;
+    public void ClearDirty() => IsDirty = false;
 
     // Set to true by the background task when data is ready.
     public bool IsReadyToApply { get; private set; } = false;
     private ChunkMeshData _meshData;
-    private ChunkData _chunkData;
+    public ChunkData Data;
 
-    public void Configure(ChunkData data)
+    public void Configure(ChunkData data, bool isDirty, int cellsPerAxis, float voxelSize, float isoLevel)
     {
-        _chunkData = data;
+        Data = data;
+        IsDirty = isDirty;
         ChunkCoordinate = data.ChunkCoordinate;
-        _cellsPerAxis = data.CellsPerAxis;
-        _voxelSize = data.VoxelSize;
-        _isoLevel = data.IsoLevel;
+        _cellsPerAxis = cellsPerAxis;
+        _voxelSize = voxelSize;
+        _isoLevel = isoLevel;
 
         float chunkWorldSize = _cellsPerAxis * _voxelSize;
         Position = new Vector3(ChunkCoordinate.X * chunkWorldSize, ChunkCoordinate.Y * chunkWorldSize, ChunkCoordinate.Z * chunkWorldSize);
@@ -38,7 +44,7 @@ public partial class TerrainChunk : MeshInstance3D
         return Task.Run(() =>
         {
             _meshData = TerrainMesher.GenerateMeshData(
-                _chunkData.Densities,
+                Data.Densities,
                 _isoLevel,
                 _voxelSize
             );

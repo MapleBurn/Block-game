@@ -9,16 +9,10 @@ public class ChunkData
 {
     public Vector3I ChunkCoordinate { get; }
     public float[,,] Densities { get; }
-    public float IsoLevel { get; }
-    public float VoxelSize { get; }
-    public int CellsPerAxis { get; }
 
-    public ChunkData(Vector3I coord, float[,,] densities, float isoLevel, float voxelSize, int cellsPerAxis)
+    public ChunkData(Vector3I coord, float[,,] densities)
     {
         ChunkCoordinate = coord;
         Densities = densities;
-        IsoLevel = isoLevel;
-        VoxelSize = voxelSize;
-        CellsPerAxis = cellsPerAxis;
     }
 }
