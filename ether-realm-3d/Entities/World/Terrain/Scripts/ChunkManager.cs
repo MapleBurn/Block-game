@@ -129,7 +129,10 @@ public partial class ChunkManager : Node3D
 
         if (dirtyData.Count == 0) return;
 
-        RegionFileManager.SaveChunks(dirtyData);
+        foreach (var dat in  dirtyData)
+        {
+            RegionFileManager.SaveChunk(dat);
+        }
     }
     
     private async Task<(ChunkData data, bool fromDisk)> GetChunkDataAsync(Vector3I coord)
