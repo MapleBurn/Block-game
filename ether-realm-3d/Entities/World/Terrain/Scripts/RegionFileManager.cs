@@ -12,9 +12,11 @@ public static class RegionFileManager
     private const uint   Magic    = 0x45544852; // "ETHR"
     private const ushort Version  = 1;
 
-    public static void SaveChunk(ChunkData data)  
+    public static void SaveChunk(ChunkData data)
     {
-        using var stream = new FileStream(SaveDir + data.ChunkCoordinate.ToString(), FileMode.Create);  
+        Directory.CreateDirectory(SaveDir);
+
+        using var stream = new FileStream(SaveDir + data.ChunkCoordinate.ToString(), FileMode.Create);
         using var writer = new BinaryWriter(stream);
         
         writer.Write(Magic);

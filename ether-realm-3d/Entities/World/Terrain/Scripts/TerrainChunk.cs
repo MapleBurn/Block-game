@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using EtherRealm3D.Entities.World.Terrain.Scripts.Data;
+﻿using EtherRealm3D.Entities.World.Terrain.Scripts.Data;
 using Godot;
 
 namespace EtherRealm3D.Entities.World.Terrain.Scripts;
@@ -9,26 +8,22 @@ public partial class TerrainChunk : MeshInstance3D
     public Vector3I ChunkCoordinate { get; private set; }
     private int _cellsPerAxis;
     private float _voxelSize;
-    private float _isoLevel;
-    
+
     // Indicates if the chunk needs to be saved to disk (has changes)
     public bool IsDirty { get; private set; } = true;
     public void MarkDirty()  => IsDirty = true;
     public void ClearDirty() => IsDirty = false;
 
-    // Set to true by the background task when data is ready.
-    public bool IsReadyToApply { get; private set; } = false;
     private ChunkMeshData _meshData;
     public ChunkData Data;
 
-    public void Configure(ChunkData data, bool isDirty, int cellsPerAxis, float voxelSize, float isoLevel)
+    public void Configure(ChunkData data, bool isDirty, int cellsPerAxis, float voxelSize)
     {
         Data = data;
         IsDirty = isDirty;
         ChunkCoordinate = data.ChunkCoordinate;
         _cellsPerAxis = cellsPerAxis;
         _voxelSize = voxelSize;
-        _isoLevel = isoLevel;
 
         float chunkWorldSize = _cellsPerAxis * _voxelSize;
         Position = new Vector3(ChunkCoordinate.X * chunkWorldSize, ChunkCoordinate.Y * chunkWorldSize, ChunkCoordinate.Z * chunkWorldSize);
@@ -36,20 +31,13 @@ public partial class TerrainChunk : MeshInstance3D
     }
 
     /// <summary>
-    /// Kicks off background mesh generation using the pre-sampled ChunkData.
-    /// Call ApplyPendingMesh() on the main thread once IsReadyToApply is true.
+    /// Hands over mesh data produced on a background thread by TerrainMesher.
+    /// ChunkManager owns that generation; this node only stores the result until
+    /// ApplyPendingMesh() uploads it.
     /// </summary>
-    public Task GenerateAsync()
+    public void SetMeshData(ChunkMeshData meshData)
     {
-        return Task.Run(() =>
-        {
-            _meshData = TerrainMesher.GenerateMeshData(
-                Data.Densities,
-                _isoLevel,
-                _voxelSize
-            );
-            IsReadyToApply = true;
-        });
+        _meshData = meshData;
     }
 
     /// <summary>
@@ -57,8 +45,6 @@ public partial class TerrainChunk : MeshInstance3D
     /// </summary>
     public void ApplyPendingMesh()
     {
-        IsReadyToApply = false;
-
         if (_meshData == null || _meshData.IsEmpty)
         {
             _meshData = null;

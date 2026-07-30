@@ -18,6 +18,11 @@ public partial class ChunkManager : Node3D
     private float _amplitude;
     private const float TerrainBaseHeight = 10.0f;
 
+    // UpdateTerrain is an async void driven every frame by WorldGenerator._Process.
+    // Only one pass may be in progress at a time, otherwise passes interleave at every
+    // await and can observe each other's half-built state.
+    private bool _isUpdating;
+
     /// <summary>
     /// Initialize the manager with terrain generation parameters.
     /// </summary>
@@ -40,74 +45,84 @@ public partial class ChunkManager : Node3D
             return;
         }
 
-        float chunkWorldSize = _cellsPerAxis * _voxelSize;
-        
-        var center = new Vector3I(
-            Mathf.FloorToInt(position.X / chunkWorldSize),
-            Mathf.FloorToInt(position.Y / chunkWorldSize),
-            Mathf.FloorToInt(position.Z / chunkWorldSize));
-        
-        var desired = new HashSet<Vector3I>();
-        for (int x = -radius; x <= radius; x++)
-        for (int y = -radius; y <= radius; y++)
-        for (int z = -radius; z <= radius; z++)
-            desired.Add(center + new Vector3I(x, y, z));
+        if (_isUpdating) return;
+        _isUpdating = true;
 
-        // Unload out-of-range chunks 
-        var toUnload = new List<Vector3I>();
-        foreach (var coord in _chunks.Keys)
-            if (!desired.Contains(coord))
-                toUnload.Add(coord);
-
-        if (toUnload.Count > 0)
-            UnloadChunks(toUnload);
-        
-        var pendingTasks = new List<(Vector3I coord, Task<(ChunkData data, bool fromDisk)> task)>();
-
-        foreach (var coord in desired)
+        try
         {
-            if (_chunks.ContainsKey(coord)) continue;       // already active
-            if (_chunksInFlight.Contains(coord)) continue;  // already being generated
+            float chunkWorldSize = _cellsPerAxis * _voxelSize;
 
-            _chunksInFlight.Add(coord);
-            pendingTasks.Add((coord, GetChunkDataAsync(coord)));
+            var center = new Vector3I(
+                Mathf.FloorToInt(position.X / chunkWorldSize),
+                Mathf.FloorToInt(position.Y / chunkWorldSize),
+                Mathf.FloorToInt(position.Z / chunkWorldSize));
+
+            var desired = new HashSet<Vector3I>();
+            for (int x = -radius; x <= radius; x++)
+            for (int y = -radius; y <= radius; y++)
+            for (int z = -radius; z <= radius; z++)
+                desired.Add(center + new Vector3I(x, y, z));
+
+            // Unload out-of-range chunks
+            var toUnload = new List<Vector3I>();
+            foreach (var coord in _chunks.Keys)
+                if (!desired.Contains(coord))
+                    toUnload.Add(coord);
+
+            if (toUnload.Count > 0)
+                UnloadChunks(toUnload);
+
+            // Kick every load off up front so density sampling runs in parallel.
+            var pendingTasks = new List<(Vector3I coord, Task<(ChunkData data, bool fromDisk)> task)>();
+
+            foreach (var coord in desired)
+            {
+                if (_chunks.ContainsKey(coord)) continue; // already active
+                if (_chunksInFlight.Contains(coord)) continue; // already being generated
+
+                _chunksInFlight.Add(coord);
+                pendingTasks.Add((coord, GetChunkDataAsync(coord)));
+            }
+
+            foreach (var (coord, task) in pendingTasks)
+            {
+                try
+                {
+                    // Background: disk load or density sampling, then marching cubes.
+                    // Neither touches the scene tree, so nothing here can be freed underneath us.
+                    var (data, fromDisk) = await task;
+
+                    float isoLevel = _isoLevel;
+                    float voxelSize = _voxelSize;
+                    var meshData = await Task.Run(() =>
+                        TerrainMesher.GenerateMeshData(data.Densities, isoLevel, voxelSize));
+
+                    // The world may have been torn down while we were awaiting.
+                    if (!IsInstanceValid(this)) return;
+
+                    // Main thread, and no await from here down: the node is created, parented and
+                    // meshed in one uninterrupted block, so an unload can never free it midway.
+                    var chunk = new TerrainChunk();
+                    chunk.Configure(data, isDirty: !fromDisk, _cellsPerAxis, _voxelSize);
+                    chunk.SetMeshData(meshData);
+                    _chunks[coord] = chunk;
+                    AddChild(chunk);
+                    chunk.ApplyPendingMesh();
+                }
+                catch (System.Exception e)
+                {
+                    GD.PrintErr($"[ChunkManager] Chunk {coord} failed: {e.Message}");
+                }
+                finally
+                {
+                    // Must always run: a stranded coord is never retried, leaving a permanent hole.
+                    _chunksInFlight.Remove(coord);
+                }
+            }
         }
-        
-        foreach (var (coord, task) in pendingTasks)
+        finally
         {
-            // Background: disk load or density sampling
-            (ChunkData data, bool fromDisk) result;
-            try
-            {
-                result = await task;
-            }
-            catch (System.Exception e)
-            {
-                GD.PrintErr($"[ChunkManager] Load/generate failed for {coord}: {e.Message}");
-                _chunksInFlight.Remove(coord);
-                continue;
-            }
-            
-            var chunk = new TerrainChunk();
-            chunk.Configure(result.data, isDirty: !result.fromDisk, _cellsPerAxis, _voxelSize, _isoLevel);
-            _chunks[coord] = chunk;
-            AddChild(chunk);
-
-            // Background: marching-cubes triangulation
-            try
-            {
-                await chunk.GenerateAsync();
-            }
-            catch (System.Exception e)
-            {
-                GD.PrintErr($"[ChunkManager] Mesh generation failed for {coord}: {e.Message}");
-                _chunksInFlight.Remove(coord);
-                continue;
-            }
-
-            // Main thread: upload mesh + build collision
-            chunk.ApplyPendingMesh();
-            _chunksInFlight.Remove(coord);
+            _isUpdating = false;
         }
     }
     
@@ -129,9 +144,17 @@ public partial class ChunkManager : Node3D
 
         if (dirtyData.Count == 0) return;
 
-        foreach (var dat in  dirtyData)
+        foreach (var dat in dirtyData)
         {
-            RegionFileManager.SaveChunk(dat);
+            // One bad write must not abort the rest of the unload.
+            try
+            {
+                RegionFileManager.SaveChunk(dat);
+            }
+            catch (System.Exception e)
+            {
+                GD.PrintErr($"[ChunkManager] Save failed for {dat.ChunkCoordinate}: {e.Message}");
+            }
         }
     }
     
