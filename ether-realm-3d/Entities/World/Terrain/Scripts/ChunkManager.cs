@@ -111,13 +111,14 @@ public partial class ChunkManager : Node3D
         _isUpdating = false;
     }
 
-    public void SaveWorld()
+    public async void SaveWorld()
     {
         UnloadChunks(_chunks.Keys.ToList());
+        await SaveQueue.CompleteAsync();
     }
 
     #region Private Helpers
-    private void UnloadChunks(List<Vector3I> coords)
+    private async void UnloadChunks(List<Vector3I> coords)
     {
         var dirtyData = new List<ChunkData>(coords.Count);
 
@@ -139,7 +140,7 @@ public partial class ChunkManager : Node3D
         {
             try
             {
-                RegionFileManager.SaveChunk(dat);
+                await SaveQueue.EnqueueSaveAsync(dat);
             }
             catch (System.Exception e)
             {
@@ -151,7 +152,7 @@ public partial class ChunkManager : Node3D
     private async Task<(ChunkData data, bool fromDisk)> GetChunkDataAsync(Vector3I coord)
     {
         // Disk load attempt
-        ChunkData fromDisk = RegionFileManager.LoadChunk(coord);
+        ChunkData fromDisk = await SaveQueue.LoadChunkAsync(coord);
 
         if (fromDisk != null)
             return (fromDisk, true);
