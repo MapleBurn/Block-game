@@ -34,8 +34,10 @@ public partial class PauseScreen : Control
 		Visible = false;
 	}
 	
+	[Signal] public delegate void OnExitPressedEventHandler();
 	public void BtnExitPressed()
 	{
+		EmitSignal(SignalName.OnExitPressed);
 		GetTree().ChangeSceneToFile(MainMenuScenePath);
 	}
 }

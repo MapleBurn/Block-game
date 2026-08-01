@@ -18,7 +18,8 @@ public partial class WorldGenerator : Node3D
     [Export] public Player Player;
     
     public int LoadRadius = 4;
-  
+    private bool _isExiting;
+
     public override void _Ready()  
     {  
         _noise = new FastNoiseLite  
@@ -34,7 +35,14 @@ public partial class WorldGenerator : Node3D
     }  
   
     public override void _Process(double delta)  
-    {  
-        _chunkManager.UpdateTerrain(Player.GlobalPosition, LoadRadius); 
+    {
+        if (!_isExiting)
+            _chunkManager.UpdateTerrain(Player.GlobalPosition, LoadRadius); 
+    }
+    
+    public void OnExitPressed()
+    {
+        _isExiting = true;
+        _chunkManager.SaveWorld();
     }
 }

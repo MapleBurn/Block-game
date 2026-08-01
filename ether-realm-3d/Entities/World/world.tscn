@@ -39,3 +39,5 @@ shadow_enabled = true
 [node name="WorldGenerator" type="Node3D" parent="." unique_id=2007700755 node_paths=PackedStringArray("Player")]
 script = ExtResource("4_qbaeu")
 Player = NodePath("../Player")
+
+[connection signal="OnExitPressed" from="UI/PauseScreen" to="WorldGenerator" method="OnExitPressed"]

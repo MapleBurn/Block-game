@@ -2,9 +2,6 @@
 
 namespace EtherRealm3D.Entities.World.Terrain.Scripts.Data;
 
-/// <summary>
-/// Immutable data transfer object holding a chunk's density field and configuration metadata.
-/// </summary>
 public class ChunkData
 {
     public Vector3I ChunkCoordinate { get; }
