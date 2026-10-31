@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using EtherRealm3D.Entities.World.Terrain.Scripts.Chunks;
+using EtherRealm3D.Entities.World.Terrain.Scripts.Generation;
 using Godot;
 
 namespace EtherRealm3D.Entities.World.Terrain.Scripts.Meshing;
@@ -25,12 +26,11 @@ public static class TerrainMesher
     /// <summary>
     /// Thread-safe. Returns raw mesh data — no Godot objects created here.
     /// </summary>
-    public static ChunkMeshData GenerateMeshData(ChunkData data, float voxelSize)
+    public static ChunkMeshData GenerateMeshData(ChunkData data, ColumnData columns, SurfaceColoring surface, float voxelSize)
     {
         if (data.Content != ChunkContent.Mixed) return ChunkMeshData.Empty;
 
-        var vertices = new List<Vector3>();
-        var normals  = new List<Vector3>();
+        var mesh = new MeshBuffers(columns, surface, voxelSize);
 
         // Offset of each cube corner in the flat density array, relative to the cube's first corner.
         Span<int> cornerIndexOffsets = stackalloc int[8];
@@ -44,12 +44,13 @@ public static class TerrainMesher
         for (int x = 0; x < cells; x++)
         for (int y = 0; y < cells; y++)
         for (int z = 0; z < cells; z++)
-            MarchCube(x, y, z, data, voxelSize, cornerIndexOffsets, cornerDensities, edgeVertices, vertices, normals);
+            MarchCube(x, y, z, data, voxelSize, cornerIndexOffsets, cornerDensities, edgeVertices, mesh);
 
         return new ChunkMeshData
         {
-            Vertices = vertices.ToArray(),
-            Normals  = normals.ToArray()
+            Vertices = mesh.Vertices.ToArray(),
+            Normals  = mesh.Normals.ToArray(),
+            Colors   = mesh.Colors.ToArray()
         };
     }
 
@@ -64,6 +65,7 @@ public static class TerrainMesher
         arrays.Resize((int)Mesh.ArrayType.Max);
         arrays[(int)Mesh.ArrayType.Vertex] = data.Vertices;
         arrays[(int)Mesh.ArrayType.Normal] = data.Normals;
+        arrays[(int)Mesh.ArrayType.Color]  = data.Colors;
 
         var mesh = new ArrayMesh();
         mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
@@ -74,7 +76,7 @@ public static class TerrainMesher
         int cx, int cy, int cz,
         ChunkData data, float voxelSize,
         ReadOnlySpan<int> cornerIndexOffsets, Span<float> d, Span<Vector3> edgeVertices,
-        List<Vector3> vertices, List<Vector3> normals)
+        MeshBuffers mesh)
     {
         // 1. Sample the 8 corner densities.
         float[] densities = data.Densities;
@@ -118,10 +120,37 @@ public static class TerrainMesher
             Vector3 v2 = edgeVertices[e1];
 
             Vector3 normal = (v2 - v0).Cross(v1 - v0).Normalized();
+            mesh.AddTriangle(v0, v1, v2, normal);
+        }
+    }
 
-            vertices.Add(v0); normals.Add(normal);
-            vertices.Add(v1); normals.Add(normal);
-            vertices.Add(v2); normals.Add(normal);
+    /// <summary>Growing vertex buffers plus the coloring rules for one chunk.</summary>
+    private sealed class MeshBuffers(ColumnData columns, SurfaceColoring surface, float voxelSize)
+    {
+        public readonly List<Vector3> Vertices = new();
+        public readonly List<Vector3> Normals  = new();
+        public readonly List<Color>   Colors   = new();
+
+        public void AddTriangle(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 normal)
+        {
+            Color color = TriangleColor((v0 + v1 + v2) / 3f, normal);
+
+            Vertices.Add(v0); Normals.Add(normal); Colors.Add(color);
+            Vertices.Add(v1); Normals.Add(normal); Colors.Add(color);
+            Vertices.Add(v2); Normals.Add(normal); Colors.Add(color);
+        }
+
+        /// <summary>Biome color of the nearest column, turning to rock on steep slopes.</summary>
+        private Color TriangleColor(Vector3 center, Vector3 normal)
+        {
+            int last = columns.Size - 1;
+            int x = Mathf.Clamp(Mathf.RoundToInt(center.X / voxelSize), 0, last);
+            int z = Mathf.Clamp(Mathf.RoundToInt(center.Z / voxelSize), 0, last);
+            Color biomeColor = columns.SurfaceColors[columns.Index(x, z)];
+
+            float rock = Mathf.Clamp(
+                (surface.RockSlopeStart - normal.Y) / (surface.RockSlopeStart - surface.RockSlopeFull), 0f, 1f);
+            return biomeColor.Lerp(surface.RockColor, rock);
         }
     }
 

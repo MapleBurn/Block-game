@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="BiomeDefinition" format=3]
+
+[ext_resource type="Script" path="res://Entities/World/Terrain/Scripts/Generation/BiomeDefinition.cs" id="1_biome"]
+
+[resource]
+script = ExtResource("1_biome")
+BiomeName = "Plains"
+Temperature = 0.15
+Moisture = -0.15
+Continentalness = 0.15
+SurfaceColor = Color(0.48, 0.62, 0.3, 1)
+Flatten = 0.6

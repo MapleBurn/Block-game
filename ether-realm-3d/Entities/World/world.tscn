@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://bv8tk3o57d5fp" path="res://Systems/UI/Scenes/pause_screen.tscn" id="2_c7b66"]
 [ext_resource type="PackedScene" uid="uid://iqcwjbw0i4ca" path="res://Entities/Character/player.tscn" id="2_uapak"]
 [ext_resource type="Script" uid="uid://bg7n323fdhgfl" path="res://Entities/World/Terrain/Scripts/Chunks/ChunkManager.cs" id="4_qbaeu"]
+[ext_resource type="Resource" uid="uid://cfp2dktxpb3cc" path="res://Entities/World/Terrain/Resources/WorldGen/default_world_gen.tres" id="5_wgen"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_a02cp"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -19,6 +20,8 @@ tonemap_mode = 2
 ssao_enabled = true
 ssil_enabled = true
 glow_enabled = true
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.001
 
 [node name="World" type="Node3D" unique_id=398288382]
 script = ExtResource("1_c7b66")
@@ -39,5 +42,6 @@ shadow_enabled = true
 [node name="Terrain" type="Node3D" parent="." unique_id=2007700755 node_paths=PackedStringArray("Player")]
 script = ExtResource("4_qbaeu")
 Player = NodePath("../Player")
+Settings = ExtResource("5_wgen")
 
 [connection signal="OnExitPressed" from="UI/PauseScreen" to="Terrain" method="OnExitPressed"]

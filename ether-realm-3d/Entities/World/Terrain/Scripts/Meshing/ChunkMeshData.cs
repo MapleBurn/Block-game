@@ -8,10 +8,11 @@ namespace EtherRealm3D.Entities.World.Terrain.Scripts.Meshing;
 /// </summary>
 public class ChunkMeshData
 {
-    public static readonly ChunkMeshData Empty = new() { Vertices = [], Normals = [] };
+    public static readonly ChunkMeshData Empty = new() { Vertices = [], Normals = [], Colors = [] };
 
     public Vector3[] Vertices;
     public Vector3[] Normals;
+    public Color[] Colors;
 
     public bool IsEmpty => Vertices == null || Vertices.Length == 0;
 }

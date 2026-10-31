@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="BiomeDefinition" format=3]
+
+[ext_resource type="Script" path="res://Entities/World/Terrain/Scripts/Generation/BiomeDefinition.cs" id="1_biome"]
+
+[resource]
+script = ExtResource("1_biome")
+BiomeName = "Ocean"
+Temperature = 0.0
+Moisture = 0.0
+Continentalness = -0.75
+SurfaceColor = Color(0.55, 0.55, 0.45, 1)
+Flatten = 0.7

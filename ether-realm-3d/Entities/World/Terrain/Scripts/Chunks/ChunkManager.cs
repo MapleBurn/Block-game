@@ -22,11 +22,7 @@ public partial class ChunkManager : Node3D
     [Export] public float VoxelSize = 1.0f;
     [Export] public int LoadRadius = 4;
 
-    [ExportGroup("Generation")]
-    [Export] public int Seed;
-    [Export] public float NoiseFrequency = 0.025f;
-    [Export] public float BaseHeight = 10.0f;
-    [Export] public float Amplitude = 15.0f;
+    [Export] public WorldGenSettings Settings;
 
     // Loaded chunks. A null value is a loaded chunk with no surface, so it has no node.
     private readonly Dictionary<Vector3I, TerrainChunk> _chunks = new();
@@ -40,8 +36,16 @@ public partial class ChunkManager : Node3D
 
     public override void _Ready()
     {
-        _generator = new TerrainGenerator(Seed, NoiseFrequency, BaseHeight, Amplitude, CellsPerAxis, VoxelSize);
-        _material = new StandardMaterial3D { AlbedoColor = new Color(0.2f, 0.5f, 0.2f) };
+        Settings ??= new WorldGenSettings();
+        _generator = new TerrainGenerator(Settings, CellsPerAxis, VoxelSize);
+        _material = new StandardMaterial3D
+        {
+            VertexColorUseAsAlbedo = true,
+            VertexColorIsSrgb = true
+        };
+
+        if (Player != null)
+            PlaceOnSurface(Player);
     }
 
     public override void _Process(double delta)
@@ -84,7 +88,10 @@ public partial class ChunkManager : Node3D
 
             var toUnload = _chunks.Keys.Where(c => !desired.Contains(c)).ToList();
             if (toUnload.Count > 0)
+            {
                 UnloadChunks(toUnload);
+                _generator.ForgetColumnsOutside(new Vector2I(center.X, center.Z), radius);
+            }
 
             // Start every load up front so they run in parallel; nearest first so they appear first.
             var pending = desired
@@ -127,9 +134,20 @@ public partial class ChunkManager : Node3D
 
         return await Task.Run(() =>
         {
-            ChunkData data = saved ?? generator.GenerateChunk(coord);
-            return (data, TerrainMesher.GenerateMeshData(data, voxelSize));
+            ColumnData columns = generator.GetColumns(new Vector2I(coord.X, coord.Z));
+            ChunkData data = saved ?? generator.GenerateChunk(coord, columns);
+            return (data, TerrainMesher.GenerateMeshData(data, columns, generator.Surface, voxelSize));
         });
+    }
+
+    /// <summary>
+    /// Moves a node to just above the ground (or the sea) at its current X/Z.
+    /// </summary>
+    private void PlaceOnSurface(Node3D node)
+    {
+        Vector3 position = node.GlobalPosition;
+        float ground = _generator.SampleColumn(position.X, position.Z).Height;
+        node.GlobalPosition = new Vector3(position.X, Mathf.Max(ground, Settings.SeaLevel) + 4.0f, position.Z);
     }
 
     /// <summary>

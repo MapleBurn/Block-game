@@ -1,15 +1,15 @@
 [gd_scene format=3 uid="uid://iqcwjbw0i4ca"]
 
-[ext_resource type="Script" uid="uid://dbtfaqauyej6n" path="res://Entities/Player/Player.cs" id="1_v0iea"]
+[ext_resource type="Script" uid="uid://dbtfaqauyej6n" path="res://Entities/Character/Player.cs" id="1_v0iea"]
 [ext_resource type="Script" uid="uid://b780qau6hajo3" path="res://Systems/UI/Scripts/HUD/MetricViewer.cs" id="2_cvnsp"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_f60y1"]
-radius = 0.7
-height = 2.5
+radius = 0.4
+height = 1.8
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_f60y1"]
-radius = 0.7
-height = 2.5
+radius = 0.4
+height = 1.8
 
 [node name="Player" type="CharacterBody3D" unique_id=1196190769]
 script = ExtResource("1_v0iea")
@@ -22,7 +22,7 @@ visible = false
 mesh = SubResource("CapsuleMesh_f60y1")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1301821518]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6732583, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.49622303, 0)
 
 [node name="RayCast3D" type="RayCast3D" parent="." unique_id=1434371116]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.0079012, -1.0020349)
@@ -34,7 +34,7 @@ target_position = Vector3(0, 0, -1.5)
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = -865.0
+offset_right = -1662.0
 offset_bottom = -267.0
 grow_horizontal = 2
 grow_vertical = 2

@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="WorldGenSettings" format=3 uid="uid://cfp2dktxpb3cc"]
+
+[ext_resource type="Script" uid="uid://h77nij63pyf6" path="res://Entities/World/Terrain/Scripts/Generation/WorldGenSettings.cs" id="1_settings"]
+[ext_resource type="Script" uid="uid://rf6fi07dpu0r" path="res://Entities/World/Terrain/Scripts/Generation/BiomeDefinition.cs" id="2_biome"]
+[ext_resource type="Resource" path="res://Entities/World/Terrain/Resources/WorldGen/Biomes/ocean.tres" id="b0"]
+[ext_resource type="Resource" path="res://Entities/World/Terrain/Resources/WorldGen/Biomes/beach.tres" id="b1"]
+[ext_resource type="Resource" path="res://Entities/World/Terrain/Resources/WorldGen/Biomes/plains.tres" id="b2"]
+[ext_resource type="Resource" path="res://Entities/World/Terrain/Resources/WorldGen/Biomes/forest.tres" id="b3"]
+[ext_resource type="Resource" path="res://Entities/World/Terrain/Resources/WorldGen/Biomes/jungle.tres" id="b4"]
+[ext_resource type="Resource" path="res://Entities/World/Terrain/Resources/WorldGen/Biomes/savanna.tres" id="b5"]
+[ext_resource type="Resource" path="res://Entities/World/Terrain/Resources/WorldGen/Biomes/desert.tres" id="b6"]
+[ext_resource type="Resource" path="res://Entities/World/Terrain/Resources/WorldGen/Biomes/badlands.tres" id="b7"]
+[ext_resource type="Resource" path="res://Entities/World/Terrain/Resources/WorldGen/Biomes/taiga.tres" id="b8"]
+[ext_resource type="Resource" path="res://Entities/World/Terrain/Resources/WorldGen/Biomes/tundra.tres" id="b9"]
+[ext_resource type="Resource" path="res://Entities/World/Terrain/Resources/WorldGen/Biomes/snow.tres" id="b10"]
+
+[sub_resource type="Curve" id="Curve_continentalness"]
+_data = [Vector2(0, 0), 0.56, 0.56, 1, 1, Vector2(0.25, 0.14), 0.56, 2.0, 1, 1, Vector2(0.36, 0.36), 2.0, 2.1667, 1, 1, Vector2(0.42, 0.49), 2.1667, 1.0, 1, 1, Vector2(0.45, 0.52), 1.0, 0.5, 1, 1, Vector2(0.55, 0.57), 0.5, 0.44, 1, 1, Vector2(0.8, 0.68), 0.44, 0.85, 1, 1, Vector2(1, 0.85), 0.85, 0.85, 1, 1]
+point_count = 8
+
+[sub_resource type="Curve" id="Curve_ruggedness"]
+_data = [Vector2(0, 0), 0.0, 0.0, 1, 1, Vector2(0.5, 0), 0.0, 2.0, 1, 1, Vector2(0.65, 0.3), 2.0, 3.0, 1, 1, Vector2(0.8, 0.75), 3.0, 1.25, 1, 1, Vector2(1, 1), 1.25, 1.25, 1, 1]
+point_count = 5
+
+[resource]
+script = ExtResource("1_settings")
+ContinentalnessHeight = SubResource("Curve_continentalness")
+RuggednessMountains = SubResource("Curve_ruggedness")
+TemperatureLapseRate = 0.006
+Biomes = Array[ExtResource("2_biome")]([ExtResource("b0"), ExtResource("b1"), ExtResource("b2"), ExtResource("b3"), ExtResource("b4"), ExtResource("b5"), ExtResource("b6"), ExtResource("b7"), ExtResource("b8"), ExtResource("b9"), ExtResource("b10")])

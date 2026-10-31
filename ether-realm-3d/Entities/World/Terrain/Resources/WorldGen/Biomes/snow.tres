@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="BiomeDefinition" format=3]
+
+[ext_resource type="Script" path="res://Entities/World/Terrain/Scripts/Generation/BiomeDefinition.cs" id="1_biome"]
+
+[resource]
+script = ExtResource("1_biome")
+BiomeName = "Snow"
+Temperature = -0.9
+Moisture = 0.0
+Continentalness = 0.15
+SurfaceColor = Color(0.93, 0.95, 0.98, 1)
