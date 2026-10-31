@@ -23,32 +23,49 @@ public partial class TerrainChunk : MeshInstance3D
         Name = $"Chunk_{ChunkCoordinate.X}_{ChunkCoordinate.Y}_{ChunkCoordinate.Z}";
     }
 
+    // Triangle list kept so collision can be built whenever the player comes close.
+    private Vector3[] _collisionFaces;
+    private StaticBody3D _collisionBody;
+
     /// <summary>
-    /// Main thread only. Uploads mesh data produced on a background thread by TerrainMesher
-    /// and rebuilds collision from it.
+    /// Main thread only. Uploads mesh data produced on a background thread by TerrainMesher.
+    /// Any existing collision is rebuilt from the new mesh.
     /// </summary>
     public void ApplyMesh(ChunkMeshData meshData, Material material)
     {
         ArrayMesh mesh = TerrainMesher.BuildMesh(meshData);
-        if (mesh == null) return;
-
-        mesh.SurfaceSetMaterial(0, material);
+        if (mesh != null)
+            mesh.SurfaceSetMaterial(0, material);
         Mesh = mesh;
-        BuildCollision(meshData);
-    }
-
-    private void BuildCollision(ChunkMeshData meshData)
-    {
-        foreach (var child in GetChildren())
-            if (child is StaticBody3D) child.QueueFree();
 
         // Mesh data is a plain triangle list, so the vertices are already the face list.
-        var poly = new ConcavePolygonShape3D();
-        poly.SetFaces(meshData.Vertices);
+        _collisionFaces = meshData.Vertices;
+        if (_collisionBody != null)
+        {
+            SetCollisionEnabled(false);
+            SetCollisionEnabled(true);
+        }
+    }
 
-        var shape = new CollisionShape3D { Shape = poly };
-        var body = new StaticBody3D();
-        body.AddChild(shape);
-        AddChild(body);
+    /// <summary>
+    /// Main thread only. Collision is costly to build, so only chunks near the player have it.
+    /// </summary>
+    public void SetCollisionEnabled(bool enabled)
+    {
+        if (!enabled)
+        {
+            _collisionBody?.QueueFree();
+            _collisionBody = null;
+            return;
+        }
+
+        if (_collisionBody != null || _collisionFaces == null || _collisionFaces.Length == 0) return;
+
+        var poly = new ConcavePolygonShape3D();
+        poly.SetFaces(_collisionFaces);
+
+        _collisionBody = new StaticBody3D();
+        _collisionBody.AddChild(new CollisionShape3D { Shape = poly });
+        AddChild(_collisionBody);
     }
 }

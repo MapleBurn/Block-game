@@ -26,5 +26,5 @@ point_count = 5
 script = ExtResource("1_settings")
 ContinentalnessHeight = SubResource("Curve_continentalness")
 RuggednessMountains = SubResource("Curve_ruggedness")
-TemperatureLapseRate = 0.006
+TemperatureLapseRate = 0.0018
 Biomes = Array[ExtResource("2_biome")]([ExtResource("b0"), ExtResource("b1"), ExtResource("b2"), ExtResource("b3"), ExtResource("b4"), ExtResource("b5"), ExtResource("b6"), ExtResource("b7"), ExtResource("b8"), ExtResource("b9"), ExtResource("b10")])

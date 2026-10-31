@@ -9,4 +9,4 @@ Temperature = -0.35
 Moisture = 0.3
 Continentalness = 0.15
 SurfaceColor = Color(0.2, 0.34, 0.22, 1)
-Roughness = 1.0
+Roughness = 4.0
