@@ -1,4 +1,4 @@
-﻿namespace EtherRealm3D.Entities.World.Terrain.Scripts.Data;
+﻿namespace EtherRealm3D.Entities.World.Terrain.Scripts.Meshing;
 
 public static class MarchingCubesTables
 {

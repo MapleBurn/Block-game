@@ -2,16 +2,17 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using EtherRealm3D.Entities.World.Terrain.Scripts.Data;
+using EtherRealm3D.Entities.World.Terrain.Scripts.Chunks;
 using Godot;
 
-namespace EtherRealm3D.Entities.World.Terrain.Scripts;
+namespace EtherRealm3D.Entities.World.Terrain.Scripts.Persistence;
 
 public static class SaveQueue
 {
     private abstract record DiskOp;
     private sealed record SaveOp(ChunkData Data) : DiskOp;
     private sealed record LoadOp(Vector3I Coord, TaskCompletionSource<ChunkData> Tcs) : DiskOp;
+    private sealed record FlushOp(TaskCompletionSource Tcs) : DiskOp;
     private static readonly ActionBlock<DiskOp> Worker;
 
     static SaveQueue()
@@ -42,6 +43,11 @@ public static class SaveQueue
                         load.Tcs.SetException(ex);
                     }
                     break;
+
+                case FlushOp flush:
+                    // Ops run one at a time in order, so everything queued before this is done.
+                    flush.Tcs.SetResult();
+                    break;
             }
         },
         new ExecutionDataflowBlockOptions
@@ -62,16 +68,18 @@ public static class SaveQueue
 
         bool accepted = await Worker.SendAsync(new LoadOp(coord, tcs), ct);
         if (!accepted)
-            throw new InvalidOperationException("[SaveQueue] Not accepting operations — has CompleteAsync been called?");
+            throw new InvalidOperationException("[SaveQueue] Not accepting operations.");
 
         // WaitAsync propagates cancellation while we wait for the worker result
         return await tcs.Task.WaitAsync(ct);
     }
 
-    // Call on game exit. Drains remaining operations before returning
-    public static async Task CompleteAsync()
+    // Call on game exit. Waits for every operation queued so far; the queue stays usable
+    // so a world can be loaded again without restarting the game.
+    public static async Task FlushAsync()
     {
-        Worker.Complete();
-        await Worker.Completion;
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        await Worker.SendAsync(new FlushOp(tcs));
+        await tcs.Task;
     }
 }

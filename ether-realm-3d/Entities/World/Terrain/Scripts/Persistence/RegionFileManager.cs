@@ -1,10 +1,12 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
-using EtherRealm3D.Entities.World.Terrain.Scripts.Data;
+using EtherRealm3D.Entities.World.Terrain.Scripts.Chunks;
 using Godot;
 using FileAccess = System.IO.FileAccess;
 
-namespace EtherRealm3D.Entities.World.Terrain.Scripts;
+namespace EtherRealm3D.Entities.World.Terrain.Scripts.Persistence;
 
 public static class RegionFileManager
 {
@@ -55,6 +57,9 @@ public static class RegionFileManager
 
     public static void SaveChunk(ChunkData data)
     {
+        // Uniform chunks carry no densities and are cheap to regenerate.
+        if (data.Densities == null) return;
+
         Directory.CreateDirectory(SaveDir);
 
         var region = ChunkToRegion(data.ChunkCoordinate);
@@ -71,13 +76,11 @@ public static class RegionFileManager
             mw.Write(data.ChunkCoordinate.Y);
             mw.Write(data.ChunkCoordinate.Z);
 
-            mw.Write(data.Densities.GetLength(0));
-            mw.Write(data.Densities.GetLength(1));
-            mw.Write(data.Densities.GetLength(2));
-            for (int x = 0; x < data.Densities.GetLength(0); x++)
-            for (int y = 0; y < data.Densities.GetLength(1); y++)
-            for (int z = 0; z < data.Densities.GetLength(2); z++)
-                mw.Write(data.Densities[x, y, z]);
+            mw.Write(data.Size);
+            mw.Write(data.Size);
+            mw.Write(data.Size);
+            // Raw little-endian floats in x, y, z order (same layout as ChunkData.Index).
+            mw.Write(MemoryMarshal.AsBytes(data.Densities.AsSpan()));
 
             payload = ms.ToArray();
         }
@@ -146,12 +149,12 @@ public static class RegionFileManager
         int sizeY = r.ReadInt32();
         int sizeZ = r.ReadInt32();
 
-        var densities = new float[sizeX, sizeY, sizeZ];
-        for (int x = 0; x < sizeX; x++)
-        for (int y = 0; y < sizeY; y++)
-        for (int z = 0; z < sizeZ; z++)
-            densities[x, y, z] = r.ReadSingle();
+        if (sizeX != sizeY || sizeY != sizeZ)
+            throw new InvalidDataException($"Non-cubic chunk {coord} in {path}");
 
-        return new ChunkData(coord, densities);
+        var densities = new float[sizeX * sizeY * sizeZ];
+        fs.ReadExactly(MemoryMarshal.AsBytes(densities.AsSpan()));
+
+        return new ChunkData(coord, sizeX, densities);
     }
 }

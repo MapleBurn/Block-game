@@ -38,9 +38,4 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "Singleplayer"
 
-[node name="Button2" type="Button" parent="VBoxContainer" unique_id=848934188]
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "Magor"
-
 [connection signal="pressed" from="VBoxContainer/BtnSingleplayer" to="." method="OnSingleplayerPressed"]
