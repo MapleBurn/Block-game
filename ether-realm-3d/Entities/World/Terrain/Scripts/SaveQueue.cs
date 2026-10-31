@@ -12,8 +12,6 @@ public static class SaveQueue
     private abstract record DiskOp;
     private sealed record SaveOp(ChunkData Data) : DiskOp;
     private sealed record LoadOp(Vector3I Coord, TaskCompletionSource<ChunkData> Tcs) : DiskOp;
-
-    // Static constructor: runs once, thread-safely, before first use
     private static readonly ActionBlock<DiskOp> Worker;
 
     static SaveQueue()
@@ -70,7 +68,7 @@ public static class SaveQueue
         return await tcs.Task.WaitAsync(ct);
     }
 
-    // Call on game exit. Drains remaining ops before returning.
+    // Call on game exit. Drains remaining operations before returning
     public static async Task CompleteAsync()
     {
         Worker.Complete();

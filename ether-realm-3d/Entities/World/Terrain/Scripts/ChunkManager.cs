@@ -9,7 +9,6 @@ namespace EtherRealm3D.Entities.World.Terrain.Scripts;
 public partial class ChunkManager : Node3D
 {
     private readonly Dictionary<Vector3I, TerrainChunk> _chunks = new();
-    // Coordinates of chunks that are currently generating to avoid generating the same chunk multiple times
     private readonly HashSet<Vector3I> _chunksInFlight = new();
     
     private int _cellsPerAxis;
@@ -57,9 +56,9 @@ public partial class ChunkManager : Node3D
             if (!desired.Contains(coord))
                 toUnload.Add(coord);
 
-        // don't unload too many at once to avoid stutter; the rest will be unloaded next frame
+        /*// don't unload too many at once to avoid stutter; the rest will be unloaded next frame
         if (toUnload.Count > 5)
-            toUnload.RemoveRange(5, toUnload.Count - 5);
+            toUnload.RemoveRange(5, toUnload.Count - 5);*/
         if (toUnload.Count > 0)
             UnloadChunks(toUnload);
 
@@ -79,15 +78,14 @@ public partial class ChunkManager : Node3D
         {
             try
             {
-                // Background: disk load or density sampling, then marching cubes.
+                // Background
                 var (data, fromDisk) = await task;
 
                 float isoLevel = _isoLevel;
                 float voxelSize = _voxelSize;
                 var meshData = await Task.Run(() =>
                     TerrainMesher.GenerateMeshData(data.Densities, isoLevel, voxelSize));
-
-                // The world may have been torn down while we were awaiting.
+                
                 if (!IsInstanceValid(this)) return;
 
                 // Main thread

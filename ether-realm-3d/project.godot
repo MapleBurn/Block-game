@@ -24,7 +24,8 @@ project/assembly_name="EtherRealm3D"
 
 folder_colors={
 "res://Entities/": "purple",
-"res://Systems/": "yellow"
+"res://Systems/": "yellow",
+"res://game_data/": "gray"
 }
 
 [input]
